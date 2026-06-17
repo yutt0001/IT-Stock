@@ -27,6 +27,26 @@ let allData = [];
 let fullInventoryData = [];
 let chartInstances = {};
 
+// ฟังก์ชันตรวจจับการเปิดผ่านแอปพลิเคชัน LINE
+function checkLineBrowser() {
+    const ua = navigator.userAgent || navigator.vendor || window.opera;
+    if (ua.indexOf("Line") > -1) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'ข้อจำกัดของแอป LINE',
+            html: 'เบราว์เซอร์ของ LINE ไม่รองรับการเปิดกล้องถ่ายภาพ<br><br><b>กรุณากดปุ่ม 3 จุด (มุมขวาบน หรือมุมขวาล่าง)</b><br>แล้วเลือก <b>"เปิดในเบราว์เซอร์อื่น"</b> (Open in Browser) หรือ <b>"เปิดใน Safari"</b> ครับ',
+            confirmButtonText: 'รับทราบ',
+            confirmButtonColor: '#f39c12'
+        });
+    }
+}
+
+// นำไปใส่ไว้ในฟังก์ชัน initializeApp() หรือตอนโหลดหน้าเว็บ
+document.addEventListener('DOMContentLoaded', () => {
+    checkLineBrowser(); // เรียกใช้งานเช็ก LINE
+    // ... โค้ดเดิมของคุณ ...
+});
+
 // ==========================================
 // 2. ระบบเริ่มต้น & การนำทาง (Navigation)
 // ==========================================
