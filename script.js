@@ -420,19 +420,19 @@ async function deleteEquipment(itemId) {
 // ==========================================
 async function loadCategories() {
     try {
+        console.log("✅ โค้ดเวอร์ชันใหม่ทำงานแล้ว: กำลังดึงข้อมูล Categories...");
         const res = await callBackend('getCategories');
-        console.log("📌 ข้อมูลที่โหลดมาจาก Config:", res); // ปริ้นข้อมูลให้ดูใน Console (กด F12 เพื่อดูได้)
+        console.log("📌 ข้อมูลที่ได้จากหลังบ้าน:", res); 
         
-        // ถ้าระบบหลังบ้านตอบกลับมาว่ามี Error (เช่น หาชีตไม่เจอ)
-        if (res && res.success === false) {
-            Swal.fire('แจ้งเตือนการตั้งค่า', 'ไม่สามารถโหลดหมวดหมู่ได้: ' + res.message, 'warning');
-            return;
-        }
-
+        // ชี้เป้าข้อมูลที่ถูกซ้อนมาให้ถูกต้อง
         const catData = res.data ? res.data : res;
 
+        // วาด Dropdown (ใส่ if ป้องกัน Error .map() ไว้แล้ว)
         const setSel = (id, arr, p) => { 
-            if (!arr || !Array.isArray(arr)) return; 
+            if (!arr || !Array.isArray(arr)) {
+                console.warn(`ไม่พบข้อมูลสำหรับช่อง ${id}`);
+                return; 
+            }
             document.getElementById(id).innerHTML = `<option value="">${p}</option>` + arr.map(a => `<option value="${a}">${a}</option>`).join(''); 
         };
 
