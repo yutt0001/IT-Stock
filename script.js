@@ -64,7 +64,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// ฟังก์ชันตรวจจับการเปิดผ่านแอปพลิเคชัน LINE เพื่อซ่อนกล้องสด
+function optimizeForLine() {
+    const ua = navigator.userAgent || navigator.vendor || window.opera;
+    // ถ้าตรวจพบว่าเป็นแอป LINE
+    if (ua.indexOf("Line") > -1) {
+        // ซ่อนปุ่มสลับแท็บถ่ายภาพ (แท็บกล้องสด)
+        const cameraTabBtn = document.querySelector('[data-bs-target="#cameraTab"]');
+        if (cameraTabBtn) {
+            cameraTabBtn.parentElement.style.display = 'none';
+        }
+        
+        // บังคับให้คลิกแสดงแค่แท็บอัปโหลดเป็นค่าเริ่มต้น
+        const uploadTabBtn = document.querySelector('[data-bs-target="#uploadTab"]');
+        if (uploadTabBtn) {
+            uploadTabBtn.click(); 
+            // เปลี่ยนข้อความปุ่มให้รู้ว่ากดถ่ายรูปได้
+            uploadTabBtn.innerHTML = '📸 ถ่ายภาพ / เลือกรูป';
+        }
+    }
+}
+
 function initializeApp() {
+    // 1. เรียกใช้ฟังก์ชันตรวจจับ LINE ทันทีที่เริ่มโหลดระบบ
+    optimizeForLine();
+
+   // 2. ระบบเมนูด้านข้าง (Sidebar) 
     const sidebarToggle = document.getElementById('sidebarToggle');
     const sidebar = document.getElementById('sidebar');
     if (sidebarToggle) {
