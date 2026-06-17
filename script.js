@@ -391,20 +391,47 @@ async function deleteEquipment(itemId) {
 // ==========================================
 // 6. การเพิ่มอุปกรณ์ (Add Equipment)
 // ==========================================
+// async function loadCategories() {
+//     try {
+//         const res = await callBackend('getCategories');
+        
+//         // ข้อมูลจริงๆ ถูกซ้อนอยู่ใน res.data (อ้างอิงจากการ return ในรหัส.gs)
+//         // แต่เพื่อความชัวร์ เราเขียนให้รองรับทั้งแบบมี .data และไม่มี
+//         const catData = res.data ? res.data : res;
+
+//         // เพิ่ม if (!arr) return; ป้องกันกรณีไม่มีข้อมูลส่งมา จะได้ไม่เกิด Error .map()
+//         const setSel = (id, arr, p) => { 
+//             if (!arr) return; 
+//             document.getElementById(id).innerHTML = `<option value="">${p}</option>` + arr.map(a => `<option value="${a}">${a}</option>`).join(''); 
+//         };
+
+//         setSel('equipmentType', catData.ItemCategory, 'เลือกประเภท');
+//         setSel('equipmentStatus', catData.Status, 'เลือกสถานะ');
+//         setSel('Unit', catData.Unit, 'เลือกหน่วย');
+//         setSel('Location', catData.Location, 'เลือกสถานที่');
+
+//     } catch(e) { 
+//         console.error("โหลด Categories ไม่สำเร็จ", e); 
+//     }
+// }
+
+// ==========================================
+// 6. การเพิ่มอุปกรณ์ (Add Equipment)
+// ==========================================
 async function loadCategories() {
     try {
         const res = await callBackend('getCategories');
         
-        // ข้อมูลจริงๆ ถูกซ้อนอยู่ใน res.data (อ้างอิงจากการ return ในรหัส.gs)
-        // แต่เพื่อความชัวร์ เราเขียนให้รองรับทั้งแบบมี .data และไม่มี
+        // ชี้เป้าให้ตรงกับโครงสร้างข้อมูลที่ถูกห่อไว้ใน res.data (ถ้ามี)
         const catData = res.data ? res.data : res;
 
-        // เพิ่ม if (!arr) return; ป้องกันกรณีไม่มีข้อมูลส่งมา จะได้ไม่เกิด Error .map()
+        // สร้างฟังก์ชันวาด Dropdown (เพิ่มบรรทัด if (!arr) return; เพื่อป้องกัน Error .map)
         const setSel = (id, arr, p) => { 
             if (!arr) return; 
             document.getElementById(id).innerHTML = `<option value="">${p}</option>` + arr.map(a => `<option value="${a}">${a}</option>`).join(''); 
         };
 
+        // ส่งข้อมูลไปวาดลง Dropdown แต่ละช่อง
         setSel('equipmentType', catData.ItemCategory, 'เลือกประเภท');
         setSel('equipmentStatus', catData.Status, 'เลือกสถานะ');
         setSel('Unit', catData.Unit, 'เลือกหน่วย');
