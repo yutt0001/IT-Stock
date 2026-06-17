@@ -1,470 +1,547 @@
 // ==========================================
-// ส่วนเชื่อมต่อกับ Backend (Google Apps Script API)
+// 1. การตั้งค่าระบบ API
 // ==========================================
+// *** นำ URL ของ Web App ใหม่มาใส่ตรงนี้ ***
 const API_URL = "วาง_URL_WEB_APP_ของ_APPS_SCRIPT_ที่นี่";
 
 async function callBackend(actionName, payloadData = {}) {
     try {
         const response = await fetch(API_URL, {
             method: "POST",
-            body: JSON.stringify({
-                action: actionName,
-                payload: payloadData
-            })
+            body: JSON.stringify({ action: actionName, payload: payloadData })
         });
-        
         const result = await response.json();
-        
         if (result.status === "success") {
             return result.data;
         } else {
-            throw new Error(result.message);
+            throw new Error(result.message || "เกิดข้อผิดพลาดจากเซิร์ฟเวอร์");
         }
     } catch (error) {
         console.error("Backend Error:", error);
         throw error;
     }
 }
+
+// Global Variables
+let allData = []; 
+let fullInventoryData = [];
+let chartInstances = {};
+
 // ==========================================
-
-
-// Global variables
-let currentUser = 'เจ้าหน้าที่ IT';
-let userRole = 'admin'; // admin, user
-let equipmentData = [];
-let transactionData = [];
-
-// Initialize the application
-document.addEventListener('DOMContentLoaded', function() {
+// 2. ระบบเริ่มต้น & การนำทาง (Navigation)
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
     initializeApp();
-    // loadSampleData();
-    // setupEventListeners();
-    showDashboard();
+    const statusUser = sessionStorage.getItem("statusUser");
+    if (statusUser) {
+        document.getElementById('webSection').style.display = 'block';
+        const data = statusUser.split(",");
+        document.getElementById("currentUser").innerText = data[3] || "N/A";
+        showPage('dashboardSection'); 
+    } else {
+        document.getElementById('webSection').style.display = 'block';
+        openLoginModal();
+    }
 });
 
 function initializeApp() {
-    // Setup sidebar toggle for mobile
     const sidebarToggle = document.getElementById('sidebarToggle');
     const sidebar = document.getElementById('sidebar');
-    
     if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', function() {
-            sidebar.classList.toggle('show');
-        });
+        sidebarToggle.addEventListener('click', () => sidebar.classList.toggle('show'));
     }
-
-    // Close sidebar when clicking outside on mobile
-    document.addEventListener('click', function(e) {
-        if (window.innerWidth <= 768) {
-            if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
-                sidebar.classList.remove('show');
-            }
+    document.addEventListener('click', (e) => {
+        if (window.innerWidth <= 768 && !sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+            sidebar.classList.remove('show');
         }
     });
-}
 
-function loadSampleData() {
-    equipmentData = [...sampleEquipment];
-    transactionData = [...sampleTransactions];
-    updateDashboardStats();
-}
-
-function setupEventListeners() {
-    // Add equipment form
-    const addEquipmentForm = document.getElementById('addEquipmentForm');
-    if (addEquipmentForm) {
-        addEquipmentForm.addEventListener('submit', handleAddEquipment);
-    }
-
-    // Borrow form
-    const borrowForm = document.getElementById('borrowForm');
-    if (borrowForm) {
-        borrowForm.addEventListener('submit', handleBorrowEquipment);
-    }
-
-    // Return form
-    const returnForm = document.getElementById('returnForm');
-    if (returnForm) {
-        returnForm.addEventListener('submit', handleReturnEquipment);
-    }
-
-    // Calculate total value when unit price or quantity changes
-    const unitPriceInput = document.getElementById('unitPrice');
-    const quantityInput = document.getElementById('quantity');
+    // Event Listeners สำหรับฟอร์มต่างๆ
+    document.getElementById("unitPrice").addEventListener("input", calcTotal);
+    document.getElementById("quantity").addEventListener("input", calcTotal);
+    document.getElementById("keyword").addEventListener("keydown", e => { if(e.key === "Enter") loadData(); });
     
-    if (unitPriceInput && quantityInput) {
-        unitPriceInput.addEventListener('input', calculateTotalValue);
-        quantityInput.addEventListener('input', calculateTotalValue);
+    document.getElementById("addEquipmentForm").addEventListener("submit", handleAddEquipment);
+    document.getElementById('editEquipmentForm').addEventListener('submit', handleEditEquipment);
+    document.getElementById('customReportForm').addEventListener('submit', handleCustomReport);
+}
+
+function showPage(pageId) {
+    document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('page-active'));
+    const target = document.getElementById(pageId);
+    if (target) {
+        target.classList.add('page-active');
+        document.querySelectorAll('#main-nav .nav-link').forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('onclick').includes(pageId)) link.classList.add('active');
+        });
+
+        // Trigger Data Load on page visit
+        if (pageId === 'dashboardSection') refreshDashboard();
+        if (pageId === 'equipmentListSection') loadData();
+        if (pageId === 'addEquipmentSection') loadCategories();
+        if (pageId === 'borrowReturnSection') initBorrowReturn();
     }
-
-    // Search functionality
-    const searchInput = document.getElementById('searchEquipment');
-    if (searchInput) {
-        searchInput.addEventListener('input', debounce(searchEquipment, 300));
-    }
+    if (window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('show');
 }
 
-// Navigation functions
-function showDashboard() {
-    hideAllSections();
-    document.getElementById('dashboardSection').style.display = 'block';
-    setActiveNavLink('แดชบอร์ด');
-    // updateDashboardStats();
-    // loadCharts();
-}
-
-function showEquipmentList() {
-    hideAllSections();
-    document.getElementById('equipmentListSection').style.display = 'block';
-    setActiveNavLink('รายการอุปกรณ์');
-    // loadEquipmentTable();
-}
-
-function showAddEquipment() {
-    hideAllSections();
-    document.getElementById('addEquipmentSection').style.display = 'block';
-    setActiveNavLink('เพิ่มอุปกรณ์');
-    // resetAddEquipmentForm();
-}
-
-function showBorrowReturn() {
-    hideAllSections();
-    document.getElementById('borrowReturnSection').style.display = 'block';
-    setActiveNavLink('เบิก-คืนอุปกรณ์');
-    // loadTransactionHistory();
-}
-
-function showReports() {
-    hideAllSections();
-    document.getElementById('reportsSection').style.display = 'block';
-    setActiveNavLink('รายงาน');
-}
-
-function showAuditSchedule() {
-    hideAllSections();
-    document.getElementById('auditScheduleSection').style.display = 'block';
-    setActiveNavLink('ตรวจสอบสินทรัพย์');
-    // loadAuditSchedule();
-}
-
-function showWarrantyAlert() {
-    hideAllSections();
-    document.getElementById('warrantyAlertSection').style.display = 'block';
-    setActiveNavLink('แจ้งเตือนการรับประกัน');
-    // loadWarrantyAlerts();
-}
-function showLogin() {
-    hideAllSections();
-    document.getElementById('loginContainer').style.display = 'block';
-    setActiveNavLink('เข้าสู่ระบบ');
-    // loadWarrantyAlerts();
-}
-
-function hideAllSections() {
-    const sections = [
-        'dashboardSection', 'equipmentListSection', 'addEquipmentSection',
-        'borrowReturnSection', 'reportsSection', 'auditScheduleSection',
-        'warrantyAlertSection', 'loginContainer'
-    ];
-    sections.forEach(section => {
-        const element = document.getElementById(section);
-        if (element) element.style.display = 'none';
-    });
-}
-
-function setActiveNavLink(text) {
-    document.querySelectorAll('.sidebar .nav-link').forEach(link => {
-        link.classList.remove('active');
-        if (link.textContent.trim().includes(text)) {
-            link.classList.add('active');
-        }
-    });
-}
-
-function showProfile() {
-  const statusUser = sessionStorage.getItem("statusUser")?.split(",") || [];
-  const status = statusUser[4] || "";
-  const fullname = statusUser[3] || "";
-  const photo = statusUser[5] || "";
-
-  Swal.fire({
-    title: 'โปรไฟล์ผู้ใช้',
-    html: `
-      <div class="text-center">
-        <img id="userPhoto" src="${photo}" alt="user photo" 
-             style="width:70px; height:auto; border-radius:50%; display:block; margin:0 auto 10px;">
-        <p class="text-start"><strong>ชื่อ:</strong> ${fullname}</p>
-        <p class="text-start"><strong>สิทธิ์การใช้งาน:</strong> ${status}</p>
-      </div>
-    `,
-    icon: 'info',
-    confirmButtonText: 'ปิด'
-  });
-}
-        
-// function showProfile() {
-//   const statusUser = sessionStorage.getItem("statusUser")?.split(",") || [];
-//   const status = statusUser[4] || "";
-//   const fullname = statusUser[3] || "";
-//   const photo = statusUser[5] || "";
-
-//   Swal.fire({
-//     title: 'โปรไฟล์ผู้ใช้',
-//     html: `
-//       <div class="text-start">
-//         <img id="userPhoto" src="${photo}" alt="user photo" style="align:center; width:50px; height:auto; border-radius:50%; margin-bottom:10px;">
-//         <p><strong>ชื่อ:</strong> ${fullname}</p>
-//         <p><strong>สิทธิ์การใช้งาน:</strong> ${status}</p>
-//       </div>
-//     `,
-//     icon: 'info',
-//     confirmButtonText: 'ปิด'
-//   });
-// }
-
-// User management functions
-// function showProfile() {
-//   const statusUser = sessionStorage.getItem("statusUser")?.split(",") || [];
-// const status = statusUser[4] || "";
-// const fullname = statusUser[3] || "";
-// const photo = statusUser[5] || "";
-//   Swal.fire({
-//       title: 'โปรไฟล์ผู้ใช้',
-//       html: `
-//           <div class="text-start">
-//           <img id="userPhoto" src="${photo}" alt="user photo width="50" height=auto>
-//               <p><strong>ชื่อ:</strong> ${fullname}</p>
-//               <p><strong>สิทธิ์การใช้งาน:</strong> ${status}</p>
-//           </div>
-//       `,
-//       icon: 'info',
-//       confirmButtonText: 'ปิด'
-//   });
-// }
-
-// function showProfile() {
-//     Swal.fire({
-//         title: 'โปรไฟล์ผู้ใช้',
-//         html: `
-//             <div class="text-start">
-//                 <p><strong>ชื่อ:</strong> ${currentUser}</p>
-//                 <p><strong>ตำแหน่ง:</strong> เจ้าหน้าที่ IT</p>
-//                 <p><strong>แผนก:</strong> เทคโนโลยีสารสนเทศ</p>
-//                 <p><strong>คณะ:</strong> ครุศาสตร์อุตสาหกรรมและเทคโนโลยี</p>
-//                 <p><strong>สิทธิ์การใช้งาน:</strong> ผู้ดูแลระบบ</p>
-//             </div>
-//         `,
-//         icon: 'info',
-//         confirmButtonText: 'ปิด'
-//     });
-// }
-
-function showSettings() {
+// ==========================================
+// 3. ระบบยืนยันตัวตน (Login/Logout)
+// ==========================================
+function openLoginModal() {
     Swal.fire({
-        title: 'ตั้งค่าระบบ',
+        title: '<h2 style="color:#333; font-weight:600;">🔐 เข้าสู่ระบบ</h2>',
         html: `
-            <div class="text-start">
-                <div class="form-check mb-2">
-                    <input class="form-check-input" type="checkbox" id="emailNotification" checked>
-                    <label class="form-check-label" for="emailNotification">
-                        แจ้งเตือนทาง Email
-                    </label>
-                </div>
-                <div class="form-check mb-2">
-                    <input class="form-check-input" type="checkbox" id="lineNotification">
-                    <label class="form-check-label" for="lineNotification">
-                        แจ้งเตือนทาง Line Notify
-                    </label>
-                </div>
-                <div class="form-check mb-2">
-                    <input class="form-check-input" type="checkbox" id="autoBackup" checked>
-                    <label class="form-check-label" for="autoBackup">
-                        สำรองข้อมูลอัตโนมัติ
-                    </label>
-                </div>
-            </div>
-        `,
-        icon: 'info',
-        showCancelButton: true,
-        confirmButtonText: 'บันทึก',
-        cancelButtonText: 'ยกเลิก'
-    }).then((result) => {
+            <div style="display:flex; flex-direction:column; gap:15px; padding:10px 0;">
+                <input id="swal-username" class="swal2-input m-0" placeholder="👤 Username">
+                <input id="swal-password" type="password" class="swal2-input m-0" placeholder="🔑 Password">
+            </div>`,
+        confirmButtonText: '🚀 เข้าสู่ระบบ',
+        confirmButtonColor: '#3085d6',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showCloseButton: false,
+        preConfirm: () => {
+            const u = document.getElementById('swal-username').value.trim();
+            const p = document.getElementById('swal-password').value.trim();
+            if (!u || !p) { Swal.showValidationMessage('⚠ กรุณากรอกข้อมูลให้ครบถ้วน'); return false; }
+            return { u, p };
+        }
+    }).then(async (result) => {
         if (result.isConfirmed) {
-            Swal.fire({
-                icon: 'success',
-                title: 'บันทึกการตั้งค่าแล้ว!',
-                timer: 1500,
-                showConfirmButton: false
-            });
+            Swal.fire({ title: 'กำลังตรวจสอบ', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            try {
+                const res = await callBackend('checkLogin', { username: result.value.u, password: result.value.p });
+                if (res && res.success) {
+                    const sessionStr = `${res.id||"id"},${result.value.u},- ,${res.fullname},${res.status},${res.photo||""}`;
+                    sessionStorage.setItem("statusUser", sessionStr);
+                    document.getElementById("currentUser").innerText = res.fullname;
+                    Swal.fire({ icon: 'success', title: 'ยินดีต้อนรับ ' + res.fullname, timer: 1500, showConfirmButton: false });
+                    showPage('dashboardSection');
+                } else {
+                    Swal.fire({ icon: 'error', title: 'ไม่สำเร็จ', text: res.message || 'รหัสไม่ถูกต้อง' }).then(() => openLoginModal());
+                }
+            } catch(e) {
+                Swal.fire({ icon: 'error', title: 'ข้อผิดพลาด', text: e.message }).then(() => openLoginModal());
+            }
         }
     });
 }
 
 function logout() {
     Swal.fire({
-        title: 'ออกจากระบบ',
-        text: 'คุณต้องการออกจากระบบหรือไม่?',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'ออกจากระบบ',
-        cancelButtonText: 'ยกเลิก'
+        title: 'ออกจากระบบ?', icon: 'question', showCancelButton: true, confirmButtonText: 'ออกจากระบบ'
     }).then((result) => {
         if (result.isConfirmed) {
-            Swal.fire({
-                icon: 'success',
-                title: 'ออกจากระบบแล้ว!',
-                text: 'ขอบคุณที่ใช้งานระบบ',
-                timer: 2000,
-                showConfirmButton: false
-            }).then(() => {
-                // In real implementation, redirect to login page
-                // location.reload();
-                sessionStorage.clear()
-                document.getElementById('webSection').style.display = 'block';
-                openLoginModal();
-            });
+            sessionStorage.clear();
+            document.getElementById('webSection').style.display = 'none';
+            openLoginModal();
         }
     });
 }
 
-// Utility functions
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
+function showProfile() {
+    const d = sessionStorage.getItem("statusUser")?.split(",") || [];
+    Swal.fire({
+        title: 'โปรไฟล์',
+        html: `<img src="${d[5]||'https://via.placeholder.com/70'}" style="width:70px; border-radius:50%; margin-bottom:15px;">
+               <p><strong>ชื่อ:</strong> ${d[3]||'-'}</p><p><strong>สิทธิ์:</strong> ${d[4]||'-'}</p>`,
+        icon: 'info'
+    });
+}
+
+function showSettings() {
+    Swal.fire({ icon: 'info', title: 'ตั้งค่าระบบ', text: 'กำลังพัฒนาระบบตั้งค่า...', confirmButtonText: 'รับทราบ' });
+}
+
+// ==========================================
+// 4. แดชบอร์ด (Dashboard)
+// ==========================================
+async function refreshDashboard() {
+    Swal.fire({ title: 'กำลังโหลดแดชบอร์ด', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    try {
+        const inventory = await callBackend('getInventory');
+        const transactions = await callBackend('getTransactionLog');
+        
+        dashboardUpdateStatsCards(inventory, transactions);
+        dashboardRenderMonthlyChart(transactions);
+        dashboardRenderStatusChart(inventory);
+        dashboardRenderPopularChart(transactions);
+        dashboardRenderValueChart(inventory);
+        
+        Swal.close();
+    } catch(e) {
+        Swal.fire('ข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลแดชบอร์ดได้', 'error');
+    }
+}
+
+function dashboardUpdateStatsCards(inventory, transactions) {
+    const stock = inventory.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
+    const borrowed = transactions.reduce((acc, tx) => acc + (tx.transactionType === 'เบิก' ? Number(tx.quantityChange) : (tx.transactionType === 'คืน' ? -Number(tx.quantityChange) : 0)), 0);
+    const total = stock + borrowed;
+    const value = inventory.reduce((sum, item) => sum + (Number(item.totalValue) || 0), 0);
+    
+    document.getElementById('dashboardTotalCount').textContent = total.toLocaleString('th-TH');
+    document.getElementById('availableEquipment').textContent = (total - borrowed).toLocaleString('th-TH');
+    document.getElementById('borrowedEquipment').textContent = borrowed.toLocaleString('th-TH');
+    document.getElementById('totalValue').textContent = value.toLocaleString('th-TH');
+}
+
+function parseThaiDate(dateString) {
+    if (!dateString) return null;
+    if (dateString.includes('T')) return new Date(dateString);
+    const match = dateString.match(/(\d{1,2})[\/\.](\d{1,2})[\/\.](\d{4})/);
+    if (match) {
+        let y = parseInt(match[3]); if(y > 2500) y -= 543;
+        return new Date(y, parseInt(match[2])-1, parseInt(match[1]));
+    }
+    return new Date(dateString);
+}
+
+function dashboardRenderMonthlyChart(transactions) {
+    if (chartInstances.monthly) chartInstances.monthly.destroy();
+    const ctx = document.getElementById('dashboardMonthlyBorrowChart').getContext('2d');
+    const data = { 'เบิก': Array(12).fill(0), 'คืน': Array(12).fill(0) };
+    const curYear = new Date().getFullYear();
+    transactions.forEach(tx => {
+        const d = parseThaiDate(tx.timestamp);
+        if (d && d.getFullYear() === curYear && data[tx.transactionType]) {
+            data[tx.transactionType][d.getMonth()] += Number(tx.quantityChange)||0;
+        }
+    });
+    chartInstances.monthly = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'],
+            datasets: [{label: 'เบิก', data: data['เบิก'], borderColor: '#ff9a9e', fill: false},
+                       {label: 'คืน', data: data['คืน'], borderColor: '#11998e', fill: false}]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+}
+
+function dashboardRenderStatusChart(inventory) {
+    if (chartInstances.status) chartInstances.status.destroy();
+    const counts = inventory.reduce((acc, it) => { acc[it.status||'ไม่ระบุ'] = (acc[it.status||'ไม่ระบุ']||0) + (Number(it.quantity)||0); return acc; }, {});
+    chartInstances.status = new Chart(document.getElementById('dashboardStatusChart'), {
+        type: 'doughnut',
+        data: { labels: Object.keys(counts), datasets: [{ data: Object.values(counts), backgroundColor: ['#38ef7d', '#ff9a9e', '#f39c12', '#667eea'] }] },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+}
+
+function dashboardRenderPopularChart(transactions) {
+    if (chartInstances.popular) chartInstances.popular.destroy();
+    const counts = transactions.filter(t=>t.transactionType==='เบิก').reduce((acc, t) => { acc[t.itemName||'ไม่ระบุ'] = (acc[t.itemName||'ไม่ระบุ']||0) + (Number(t.quantityChange)||0); return acc; }, {});
+    const top = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+    chartInstances.popular = new Chart(document.getElementById('dashboardPopularEquipmentChart'), {
+        type: 'bar',
+        data: { labels: top.map(i=>i[0]), datasets: [{ label: 'ครั้ง', data: top.map(i=>i[1]), backgroundColor: '#667eea' }] },
+        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+}
+
+function dashboardRenderValueChart(inventory) {
+    if (chartInstances.value) chartInstances.value.destroy();
+    const vals = inventory.reduce((acc, it) => { acc[it.type||'ไม่ระบุ'] = (acc[it.type||'ไม่ระบุ']||0) + (Number(it.totalValue)||0); return acc; }, {});
+    chartInstances.value = new Chart(document.getElementById('dashboardValueByTypeChart'), {
+        type: 'bar',
+        data: { labels: Object.keys(vals), datasets: [{ label: 'มูลค่า (บาท)', data: Object.values(vals), backgroundColor: '#fcb69f' }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+}
+
+// ==========================================
+// 5. ระบบจัดการอุปกรณ์ (Inventory)
+// ==========================================
+async function loadData() {
+    const filters = {
+        keyword: document.getElementById("keyword").value.trim(),
+        category: document.getElementById("category").value,
+        status: document.getElementById("status").value,
+        location: document.getElementById("location").value
     };
+    document.getElementById("tableBody").innerHTML = `<tr><td colspan="10">กำลังโหลด...</td></tr>`;
+    try {
+        const data = await callBackend('getInventoryData', { filters });
+        displayData(data);
+    } catch(e) {
+        Swal.fire('ข้อผิดพลาด', e.message, 'error');
+    }
 }
 
-function showPage(pageId) {
-    // 1. ลบคลาส 'page-active' ออกจากทุก Section ก่อน (เป็นการรีเซ็ต)
-    document.querySelectorAll('.page-section').forEach(section => {
-        section.classList.remove('page-active');
+function displayData(data) {
+    allData = Array.isArray(data) ? data : [];
+    const tbody = document.getElementById("tableBody");
+    if (!allData.length) { tbody.innerHTML = `<tr><td colspan="10">ไม่พบข้อมูล</td></tr>`; return; }
+    
+    // Set filter options
+    const setOpt = (id, vals) => { const el=document.getElementById(id), cur=el.value; el.innerHTML='<option>ทั้งหมด</option>'+vals.map(v=>`<option>${v}</option>`).join(''); el.value=cur; };
+    setOpt("category", [...new Set(allData.map(d=>d.Category).filter(Boolean))]);
+    setOpt("status", [...new Set(allData.map(d=>d.Status).filter(Boolean))]);
+    setOpt("location", [...new Set(allData.map(d=>d.Location).filter(Boolean))]);
+
+    let html = "";
+    allData.forEach(item => {
+        const img = item.ImageURL || "https://via.placeholder.com/60";
+        html += `<tr>
+            <td><img src="${img}" style="max-width:50px"></td>
+            <td class="text-start">${item.Name||''}</td><td>${item.Category||''}</td><td>${item.SerialNumber||''}</td>
+            <td>${item.Status||''}</td><td>${item.Quantity||'0'}</td><td>${item.Location||''}</td>
+            <td>${item.Custodian||''}</td><td>${item.WarrantyExpireDate||'-'}</td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary" onclick="viewEquipmentDetail('${item.ItemID}')"><i class="fas fa-eye"></i></button>
+                <button class="btn btn-sm btn-outline-warning" onclick="editEquipment('${item.ItemID}')"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-sm btn-outline-danger" onclick="deleteEquipment('${item.ItemID}')"><i class="fas fa-trash"></i></button>
+            </td>
+        </tr>`;
     });
+    tbody.innerHTML = html;
+}
 
-    // 2. แสดงเฉพาะ Section ที่เราต้องการโดยการเพิ่มคลาส 'page-active'
-    const targetSection = document.getElementById(pageId);
-    if (targetSection) {
-        targetSection.classList.add('page-active');
-        console.log(`Showing page: #${pageId}`);
+function resetFilters() {
+    ['keyword'].forEach(id => document.getElementById(id).value = '');
+    ['category','status','location'].forEach(id => document.getElementById(id).value = 'ทั้งหมด');
+    loadData();
+}
 
-        // 3. จัดการ Active Class ของเมนู
-        document.querySelectorAll('#main-nav .nav-link').forEach(link => {
-            link.classList.remove('active');
-        });
-        const clickedNavLink = document.querySelector(`#main-nav .nav-link[onclick="showPage('${pageId}')"]`);
-        if (clickedNavLink) {
-            clickedNavLink.classList.add('active');
-        }
+function viewEquipmentDetail(itemId) {
+    const item = allData.find(d => d.ItemID === itemId);
+    if (!item) return;
+    document.getElementById('equipmentDetailContent').innerHTML = `
+        <div class="row">
+            <div class="col-md-4 text-center"><img src="${item.ImageURL||'https://via.placeholder.com/200'}" class="img-fluid rounded mb-3"></div>
+            <div class="col-md-8">
+                <h4>${item.Name}</h4>
+                <table class="table table-bordered">
+                    <tr><th>รหัส</th><td>${item.ItemID}</td></tr><tr><th>ประเภท</th><td>${item.Category}</td></tr>
+                    <tr><th>S/N</th><td>${item.SerialNumber}</td></tr><tr><th>สถานะ</th><td>${item.Status}</td></tr>
+                    <tr><th>คงเหลือ</th><td>${item.Quantity} ${item.Unit||''}</td></tr><tr><th>สถานที่เก็บ</th><td>${item.Location}</td></tr>
+                    <tr><th>ผู้รับผิดชอบ</th><td>${item.Custodian}</td></tr><tr><th>หมายเหตุ</th><td>${item.Notes}</td></tr>
+                </table>
+            </div>
+        </div>`;
+    new bootstrap.Modal(document.getElementById('equipmentDetailModal')).show();
+}
 
-        // 4. (สำคัญ) ถ้าหน้าที่แสดงคือ Dashboard ให้ทำการโหลดข้อมูลใหม่เสมอ
-        if (pageId === 'dashboardSection' && typeof refreshDashboard === 'function') {
-            refreshDashboard();
-        }
+function editEquipment(itemId) {
+    const item = allData.find(d => d.ItemID === itemId);
+    if (!item) return;
+    const opts = ['ใหม่', 'ใช้งานได้', 'ชำรุด', 'ส่งซ่อม', 'จำหน่าย'].map(o => `<option ${item.Status===o?'selected':''}>${o}</option>`).join('');
+    
+    document.getElementById('editEquipmentForm').innerHTML = `
+        <input type="hidden" id="editItemId" value="${item.ItemID}">
+        <div class="row g-3">
+            <div class="col-md-8"><label>ชื่ออุปกรณ์</label><input type="text" class="form-control" id="editName" value="${item.Name}" required></div>
+            <div class="col-md-4"><label>ประเภท</label><input type="text" class="form-control" id="editCategory" value="${item.Category}"></div>
+            <div class="col-md-6"><label>S/N</label><input type="text" class="form-control" id="editSerialNumber" value="${item.SerialNumber}"></div>
+            <div class="col-md-6"><label>สถานะ</label><select class="form-select" id="editStatus">${opts}</select></div>
+            <div class="col-md-3"><label>จำนวน</label><input type="number" class="form-control" id="editQuantity" value="${item.Quantity}"></div>
+            <div class="col-md-9"><label>สถานที่</label><input type="text" class="form-control" id="editLocation" value="${item.Location}"></div>
+            <div class="col-12"><label>ผู้รับผิดชอบ</label><input type="text" class="form-control" id="editCustodian" value="${item.Custodian}"></div>
+            <div class="col-12"><label>รายละเอียด</label><textarea class="form-control" id="editNotes" rows="2">${item.Notes}</textarea></div>
+        </div>
+        <div class="text-end mt-3"><button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">ยกเลิก</button><button type="submit" class="btn btn-primary">บันทึก</button></div>`;
+    new bootstrap.Modal(document.getElementById('editEquipmentModal')).show();
+}
 
-    } else {
-        console.error(`Error: Page with ID #${pageId} not found.`);
+async function handleEditEquipment(e) {
+    e.preventDefault();
+    Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    try {
+        const payload = {
+            ItemID: document.getElementById('editItemId').value, Name: document.getElementById('editName').value,
+            Category: document.getElementById('editCategory').value, SerialNumber: document.getElementById('editSerialNumber').value,
+            Status: document.getElementById('editStatus').value, Quantity: document.getElementById('editQuantity').value,
+            Location: document.getElementById('editLocation').value, Custodian: document.getElementById('editCustodian').value,
+            Notes: document.getElementById('editNotes').value, UpdatedBy: document.getElementById("currentUser").innerText
+        };
+        await callBackend('updateEquipmentData', { clientData: payload });
+        bootstrap.Modal.getInstance(document.getElementById('editEquipmentModal')).hide();
+        Swal.fire('สำเร็จ', 'บันทึกแล้ว', 'success');
+        loadData();
+    } catch(e) { Swal.fire('ผิดพลาด', e.message, 'error'); }
+}
+
+async function deleteEquipment(itemId) {
+    const res = await Swal.fire({ title: 'ยืนยันลบ?', text: `ลบอุปกรณ์ ${itemId}?`, icon: 'warning', showCancelButton: true, confirmButtonText: 'ลบเลย' });
+    if(res.isConfirmed) {
+        Swal.fire({ title: 'กำลังลบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        try {
+            await callBackend('deleteItemById', { itemId: itemId });
+            Swal.fire('สำเร็จ', 'ลบแล้ว', 'success');
+            loadData();
+        } catch(e) { Swal.fire('ผิดพลาด', e.message, 'error'); }
     }
 }
 
-// ฟังก์ชันที่จะทำงานเมื่อหน้าเว็บโหลดเสร็จครั้งแรก
-document.addEventListener('DOMContentLoaded', () => {
-    // แสดงหน้า Dashboard เป็นหน้าแรกเสมอ
-    showPage('dashboardSection');
-});
+// ==========================================
+// 6. การเพิ่มอุปกรณ์ (Add Equipment)
+// ==========================================
+async function loadCategories() {
+    try {
+        const res = await callBackend('getCategories');
+        const setSel = (id, arr, p) => { document.getElementById(id).innerHTML = `<option value="">${p}</option>` + arr.map(a=>`<option value="${a}">${a}</option>`).join(''); };
+        setSel('equipmentType', res.ItemCategory, 'เลือกประเภท');
+        setSel('equipmentStatus', res.Status, 'เลือกสถานะ');
+        setSel('Unit', res.Unit, 'เลือกหน่วย');
+        setSel('Location', res.Location, 'เลือกสถานที่');
+    } catch(e) { console.error("โหลด Categories ไม่สำเร็จ", e); }
+}
 
-// /** ฟังก์ชั่นรีโหลดหน้าเว็บ */
-// function reLoadWeb() {
-//  console.log("กำลังรีโหลดหน้า...");
-//  window.location.href = "https://script.google.com/a/macros/kmitl.ac.th/s/AKfycbwKDYqTdeCawluv_YYWdzKw0mQGNvyFcpWfEWXZsfbVw_vAnloDmPIS_wpmYu_xj7Np/exec"; // เปลี่ยน URL ไปหน้า Home
-// }
+function calcTotal() {
+    const price = parseFloat(document.getElementById("unitPrice").value) || 0;
+    const qty = parseInt(document.getElementById("quantity").value) || 0;
+    document.getElementById("totalValue").value = (price * qty).toFixed(2);
+}
 
-window.addEventListener("load", () => {
-    loadAdmin = sessionStorage.getItem("statusUser");
-    console.log("ข้อมูล admin", loadAdmin);
+async function handleAddEquipment(e) {
+    e.preventDefault();
+    Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    try {
+        const eq = {
+            name: document.getElementById("equipmentName").value, type: document.getElementById("equipmentType").value,
+            serial: document.getElementById("serialNumber").value, status: document.getElementById("equipmentStatus").value,
+            unitPrice: document.getElementById("unitPrice").value, quantity: document.getElementById("quantity").value,
+            unit: document.getElementById("Unit").value, totalValue: document.getElementById("totalValue").value,
+            vendor: document.getElementById("vendor").value, responsible: document.getElementById("responsible").value,
+            purchaseDate: document.getElementById("purchaseDate").value, warrantyExpire: document.getElementById("warrantyExpire").value,
+            auditDate: document.getElementById("auditDate").value, location: document.getElementById("Location").value,
+            locationDetail: document.getElementById("equipmentLocation").value, notes: document.getElementById("notes").value,
+            createdBy: document.getElementById("currentUser").innerText, imageUrl: ""
+        };
 
-    // showCalendar();
-    // showTable();
-    // showTable2();
-    // agency();
-    // room();
+        const file = document.getElementById("equipmentImage").files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const imgRes = await callBackend('uploadImageAndSave', { base64Data: e.target.result, filename: file.name });
+                if(imgRes.success) eq.imageUrl = imgRes.url;
+                await finalizeAdd(eq);
+            };
+            reader.readAsDataURL(file);
+        } else {
+            await finalizeAdd(eq);
+        }
+    } catch(e) { Swal.fire('ผิดพลาด', e.message, 'error'); }
+}
 
-    if (loadAdmin != null) {
-      data = loadAdmin.split(",");
-      id = data[0];
-      usename = data[1];
-      pass = data[2];
-      fullname = data[3];
-      status = data[4];
-      photo = data[5];
+async function finalizeAdd(eq) {
+    await callBackend('addEquipment', { equipment: eq });
+    Swal.fire('สำเร็จ', 'บันทึกอุปกรณ์ใหม่แล้ว', 'success').then(() => { document.getElementById("addEquipmentForm").reset(); showPage('equipmentListSection'); });
+}
 
-      /** LogFile */
-      console.log("ข้อมูล Load admin", loadAdmin);
-      console.log("ไอดี>> ", id);
-      console.log("ชื่อ>> ", usename);
-      console.log("รหัสผ่าน>> ", pass);
-      console.log("ชื่อเต็ม>> ", fullname);
-      console.log("สถานะ>> ", status);
-      console.log("รูปภาพ>> ", photo);
-      /**---------*/
+// ==========================================
+// 7. ระบบเบิก-คืน (Borrow / Return)
+// ==========================================
+async function initBorrowReturn() {
+    try {
+        const [logs, inv, borrowed, borrowers] = await Promise.all([
+            callBackend('getTransactionLog', { limit: 100 }),
+            callBackend('getInventory'),
+            callBackend('getBorrowedItems'),
+            callBackend('getBorrowers')
+        ]);
+        
+        fullInventoryData = inv;
+        renderLog(logs);
+        
+        // Setup Awesomplete
+        const bInput = document.getElementById("borrowItemSearch");
+        new Awesomplete(bInput, { list: inv.map(i=>({label:`${i.ItemID} - ${i.name||''}`, value:i.ItemID})), minChars:1 });
+        bInput.addEventListener('awesomplete-selectcomplete', e => displayItemDetails('borrow', e.text.value));
 
-        document.getElementById('webSection').style.display = 'block';
-        document.getElementById("currentUser").innerText = fullname; 
-      // if (status == "User") {
-      //   openLoginModal(); // แสดง modal login อยู่หน้า dashboard
-      //   document.getElementById('webSection').style.display = 'block'; 
-      // }
+        const rInput = document.getElementById("returnItemSearch");
+        new Awesomplete(rInput, { list: borrowed.map(i=>({label:`${i.ItemID} - ${i.name||''}`, value:i.ItemID})), minChars:1 });
+        rInput.addEventListener('awesomplete-selectcomplete', e => displayItemDetails('return', e.text.value));
 
-      // if (status == "Approver1" || status === "Approver2" || status === "Approver3"  || status === "Approver4") {
-      //   $("#menuAdmin").show();
-      //   $("#menuUser").hide();
-      //   $("#permision").show();
-      //   $("#linkSetting").hide();
-      //   $("#linkTable").hide();
-      //   $("#linkAdd2").show();
-      //   $("#linkmeTable").show();
-      // }
-      // if (status == "Admin") {
-      //   // openLoginModal(); // แสดง modal login อยู่หน้า dashboard
-      //   document.getElementById('webSection').style.display = 'block';
-      //   document.getElementById("currentUser").innerText = fullname; 
-      //   // $("#menuAdmin").show();
-      //   // $("#menuUser").hide();
-      //   // $("#permision").show();
-      //   // $("#linkSetting").hide();
-      //   // $("#linkTable").hide();
-      //   // $("#linkmeTable").show();
-      // }
+        new Awesomplete(document.getElementById("borrower"), { list: borrowers, minChars:1 });
 
-      // if (status == "Superuser") {
-      //   $("#menuAdmin").show();
-      //   $("#menuUser").hide();
-      //   $("#permision").show();
-      //   $("#linkSetting").show();
-      //   $("#linkmeTable").hide();        
-      //   $("#linkpendTable").hide();        
-      // }
+    } catch(e) { console.error("Init Borrow/Return Error:", e); }
+}
 
-      // $("#linkLogin").hide();
-      // $("#pageLogin").hide();
-      // $("#pageHome").show();
-      // $("#showCalendar").show();
-      // $("#logOut").show();
-      // $("#formLogin")[0].reset();
-      // $("#showFullname").show();
-      // $("#fullname").html(fullname);
-      // $("#status").html(status);
-      // $("#photo").attr("src", data[5]).show();
-
-        // openLoginModal(); // แสดง modal login อยู่หน้า dashboard
-        // document.getElementById('webSection').style.display = 'block';
+function displayItemDetails(type, id) {
+    const item = fullInventoryData.find(i => String(i.ItemID) === String(id));
+    const box = document.getElementById(`${type}ItemDetails`);
+    if(item) {
+        document.getElementById(`${type}ItemID`).value = item.ItemID;
+        box.innerHTML = `<strong>คงเหลือ:</strong> ${item.quantity} ${item.unit||''}<br><strong>ประเภท:</strong> ${item.type}<br><strong>ตำแหน่ง:</strong> ${item.locationDetail||'-'}`;
+        box.style.display = 'block';
+        if(type === 'return') loadReturnersList(item.ItemID);
     }
-    else{
-        openLoginModal(); // แสดง modal login อยู่หน้า dashboard
-        document.getElementById('webSection').style.display = 'block';
-    }
-});
+}
+
+async function loadReturnersList(itemId) {
+    const sel = document.getElementById("returner");
+    sel.innerHTML = `<option value="">-- กำลังโหลด --</option>`;
+    try {
+        const names = await callBackend('getReturners', { itemID: itemId });
+        sel.innerHTML = names.length ? `<option value="">-- เลือกผู้คืน --</option>` + names.map(n=>`<option>${n}</option>`).join('') : `<option disabled>ไม่มีผู้ยืมค้าง</option>`;
+    } catch(e) { console.error(e); }
+}
+
+async function loadBorrowDetail(user) {
+    const itemId = document.getElementById("returnItemID").value;
+    const box = document.getElementById("borrowDetail");
+    if(!user || !itemId) { box.style.display='none'; return; }
+    try {
+        const d = await callBackend('getBorrowDetail', { itemID: itemId, user: user });
+        if(!d) { box.innerHTML = '<span class="text-danger">ไม่พบข้อมูลยืม</span>'; return; }
+        box.innerHTML = `<strong>ยอดค้าง: ${d.outstanding}</strong> (ยืม ${d.totalBorrow} / คืน ${d.totalReturn})`;
+        box.style.display = 'block';
+    } catch(e) {}
+}
+
+async function submitTransaction(type) {
+    const payload = {
+        type: type, fullname: document.getElementById("currentUser").innerText,
+        itemID: document.getElementById(type==='เบิก'?"borrowItemID":"returnItemID").value,
+        requester: document.getElementById(type==='เบิก'?"borrower":"returner").value,
+        quantity: document.getElementById(type==='เบิก'?"borrowQty":"returnQty").value,
+        notes: document.getElementById(type==='เบิก'?"borrowNotes":"returnNotes").value,
+        condition: type==='คืน' ? document.getElementById("returnCondition").value : null
+    };
+    if(!payload.itemID || !payload.requester || !payload.quantity) return Swal.fire('แจ้งเตือน', 'กรอกข้อมูลสำคัญให้ครบ', 'warning');
+    
+    Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    try {
+        const res = await callBackend('recordTransaction', { data: payload });
+        Swal.fire('สำเร็จ', `ยอดคงเหลือใหม่: ${res.newQty}`, 'success');
+        document.getElementById("borrowQty").value = ''; document.getElementById("returnQty").value = '';
+        initBorrowReturn(); // รีเฟรชหน้าเบิกคืน
+    } catch(e) { Swal.fire('ผิดพลาด', e.message, 'error'); }
+}
+
+function renderLog(logs) {
+    const tbody = document.querySelector("#logTable tbody");
+    if(!logs.length) { tbody.innerHTML = `<tr><td colspan="7">ไม่มีประวัติ</td></tr>`; return; }
+    tbody.innerHTML = logs.map(l => `<tr><td>${l.timestamp}</td><td>${l.itemID}</td><td>${l.itemName}</td><td><span class="badge ${l.transactionType==='เบิก'?'bg-danger':'bg-success'}">${l.transactionType}</span></td><td>${l.quantityChange}</td><td>${l.requester}</td><td>${l.notes||'-'}</td></tr>`).join('');
+}
+
+// ==========================================
+// 8. ระบบรายงาน (Reports)
+// ==========================================
+async function generateQuickReport(type, format) {
+    processReport({ reportType: type, startDate: null, endDate: null, reportFormat: format });
+}
+
+async function handleCustomReport(e) {
+    e.preventDefault();
+    const s = document.getElementById('reportStartDate').value, e_date = document.getElementById('reportEndDate').value;
+    if(s && e_date && new Date(s) > new Date(e_date)) return Swal.fire('แจ้งเตือน', 'วันที่เริ่มต้นต้องน้อยกว่าสิ้นสุด', 'warning');
+    processReport({ reportType: document.getElementById('reportType').value, startDate: s, endDate: e_date, reportFormat: document.getElementById('reportFormat').value });
+}
+
+async function processReport(opts) {
+    Swal.fire({ title: 'กำลังสร้างรายงาน...', text: 'อาจใช้เวลาสักครู่', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    try {
+        const res = await callBackend('createCustomReport', { options: opts });
+        const link = document.createElement("a");
+        link.href = `data:${res.mimeType};base64,${res.base64Data}`;
+        link.download = res.fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        Swal.close();
+    } catch(e) { Swal.fire('ผิดพลาด', e.message, 'error'); }
+}
