@@ -468,20 +468,52 @@ async function handleAddEquipment(e) {
             createdBy: document.getElementById("currentUser").innerText, imageUrl: ""
         };
 
+//         const file = document.getElementById("equipmentImage").files[0];
+//         if (file) {
+//             const reader = new FileReader();
+//             reader.onload = async (e) => {
+//                 const imgRes = await callBackend('uploadImageAndSave', { base64Data: e.target.result, filename: file.name });
+//                 if(imgRes.success) eq.imageUrl = imgRes.url;
+//                 await finalizeAdd(eq);
+//             };
+//             reader.readAsDataURL(file);
+//         } else {
+//             await finalizeAdd(eq);
+//         }
+//     } catch(e) { Swal.fire('ผิดพลาด', e.message, 'error'); }
+// }
+
+// ... โค้ดดึงข้อมูล eq ด้านบนยังเหมือนเดิม ...
+
+        // เช็กข้อมูลภาพจาก 2 แหล่ง (ไฟล์อัปโหลด หรือ กล้อง)
         const file = document.getElementById("equipmentImage").files[0];
-        if (file) {
+        const cameraImageBase64 = document.getElementById("cameraImageData").value;
+
+        if (cameraImageBase64) {
+            // กรณี: ถ่ายรูปจากกล้อง (มีข้อมูล base64 อยู่แล้ว ส่งเข้า API ได้เลย)
+            const filename = "camera_" + new Date().getTime() + ".jpg";
+            const imgRes = await callBackend('uploadImageAndSave', { base64Data: cameraImageBase64, filename: filename });
+            if (imgRes.success) eq.imageUrl = imgRes.url;
+            await finalizeAdd(eq);
+            
+        } else if (file) {
+            // กรณี: อัปโหลดไฟล์ภาพ
             const reader = new FileReader();
             reader.onload = async (e) => {
                 const imgRes = await callBackend('uploadImageAndSave', { base64Data: e.target.result, filename: file.name });
-                if(imgRes.success) eq.imageUrl = imgRes.url;
+                if (imgRes.success) eq.imageUrl = imgRes.url;
                 await finalizeAdd(eq);
             };
             reader.readAsDataURL(file);
+            
         } else {
+            // กรณี: ไม่ได้ใส่รูปภาพ
             await finalizeAdd(eq);
         }
+
     } catch(e) { Swal.fire('ผิดพลาด', e.message, 'error'); }
 }
+        
 
 async function finalizeAdd(eq) {
     await callBackend('addEquipment', { equipment: eq });
@@ -602,3 +634,73 @@ async function processReport(opts) {
         Swal.close();
     } catch(e) { Swal.fire('ผิดพลาด', e.message, 'error'); }
 }
+
+// ==========================================
+// ระบบควบคุมกล้อง (Webcam)
+// ==========================================
+let videoStream = null;
+
+async function startCamera() {
+    const video = document.getElementById('cameraVideo');
+    const btnCapture = document.getElementById('btnCapture');
+    const canvas = document.getElementById('cameraCanvas');
+    const btnRetake = document.getElementById('btnRetake');
+
+    // รีเซ็ต UI
+    canvas.style.display = 'none';
+    btnRetake.style.display = 'none';
+    document.getElementById('cameraImageData').value = "";
+    
+    try {
+        // ขออนุญาตเปิดกล้อง (เน้นกล้องหลังถ้าเป็นมือถือ)
+        videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        video.srcObject = videoStream;
+        video.style.display = 'block';
+        btnCapture.style.display = 'inline-block';
+    } catch (err) {
+        console.error("Camera error:", err);
+        Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเข้าถึงกล้องได้ กรุณาตรวจสอบสิทธิ์', 'error');
+    }
+}
+
+function takeSnapshot() {
+    const video = document.getElementById('cameraVideo');
+    const canvas = document.getElementById('cameraCanvas');
+    
+    // กำหนดขนาดความละเอียดรูป
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    // วาดภาพจากวีดีโอลงผืนผ้าใบ (Canvas)
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    // แปลงรูปเป็นรหัส Base64 (คุณภาพ 80%) และเก็บลง input ซ่อน
+    document.getElementById('cameraImageData').value = canvas.toDataURL('image/jpeg', 0.8);
+    
+    // สลับหน้าจอจากวีดีโอเป็นรูปนิ่ง
+    video.style.display = 'none';
+    canvas.style.display = 'block';
+    document.getElementById('btnCapture').style.display = 'none';
+    document.getElementById('btnRetake').style.display = 'inline-block';
+    
+    stopCamera(); // ปิดกล้องเพื่อประหยัดทรัพยากร
+}
+
+function retakePhoto() {
+    startCamera();
+}
+
+function stopCamera() {
+    if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+        videoStream = null;
+    }
+}
+
+// หยุดกล้องอัตโนมัติเมื่อกดเปลี่ยนไปใช้การ "อัปโหลด" หรือเปลี่ยนหน้า
+document.addEventListener('click', (e) => {
+    if (e.target.getAttribute('data-bs-target') === '#uploadTab' || e.target.classList.contains('nav-link')) {
+        stopCamera();
+    }
+});
