@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบ Stock อุปกรณ์เทคโนโลยีสารสนเทศ - คณะครุศาสตร์อุตสาหกรรมและเทคโนโลยี</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+   <?!=include('css');?>  
+</head>
+<body>
+<div id="webSection" style="padding:20px; display: none;">
+
+    <div class="profile" style="padding:20px; display: none;">
+      <img id="userPhoto" src="" alt="user photo">
+      <h3 id="welcome"></h3>
+      <p id="userStatus"></p>
+      <button onclick="logout()">ออกจากระบบ</button>
+    </div>
+
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <button class="navbar-toggler d-lg-none" type="button" id="sidebarToggle">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-boxes me-2"></i>
+                ระบบ Stock อุปกรณ์ IT - คณะครุศาสตร์อุตสาหกรรมและเทคโนโลยี
+            </a>
+            <!-- <div class="navbar-nav ms-auto">
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-1"></i>
+                        <span id="currentUser">เจ้าหน้าที่ IT</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" onclick="showProfile()"><i class="fas fa-user me-2"></i>โปรไฟล์</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="showSettings()"><i class="fas fa-cog me-2"></i>ตั้งค่า</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i>ออกจากระบบ</a></li>
+                    </ul>
+                </div>
+            </div> -->
+
+
+
+            <div class="navbar-nav ms-auto">
+  <div class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+      <i class="fas fa-user-circle me-1"></i>
+      <span id="currentUser">เจ้าหน้าที่ IT</span>
+    </a>
+    <ul class="dropdown-menu">
+      <!-- ใช้ javascript:void(0) เพื่อกัน href รีเฟรช -->
+      <li><a class="dropdown-item" href="javascript:void(0)" onclick="showProfile()"><i class="fas fa-user me-2"></i>โปรไฟล์</a></li>
+      <li><a class="dropdown-item" href="javascript:void(0)" onclick="showSettings()"><i class="fas fa-cog me-2"></i>ตั้งค่า</a></li>
+      <li><hr class="dropdown-divider"></li>
+      <li><a class="dropdown-item" href="javascript:void(0)" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i>ออกจากระบบ</a></li>
+    </ul>
+  </div>
+</div>
+
+
+
+            <!-- <div class="navbar-nav ms-auto">
+              <div class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                      <i class="fas fa-user-circle me-1"></i>
+                      <span id="currentUser"></span> </a>
+                  <ul class="dropdown-menu dropdown-menu-end"> <li><a class="dropdown-item" href="#" onclick="alert('ยังไม่เปิดใช้งาน')"><i class="fas fa-user me-2"></i>โปรไฟล์</a></li>
+                      <li><hr class="dropdown-divider"></li>
+                      <li><a class="dropdown-item" href="#" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i>ออกจากระบบ</a></li>
+                      </ul>
+                  </div>
+              </div> -->
+
+
+
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-lg-2 p-0">
+                <div class="sidebar mt-3" id="sidebar">
+                    <nav class="nav flex-column">
+                        <a class="nav-link active" href="#" onclick="showDashboard()">
+                            <i class="fas fa-tachometer-alt me-2"></i>แดชบอร์ด
+                        </a>
+                        <a class="nav-link" href="#" onclick="showEquipmentList()">
+                            <i class="fas fa-list me-2"></i>รายการอุปกรณ์
+                        </a>
+                        <a class="nav-link" href="#" onclick="showAddEquipment()">
+                            <i class="fas fa-plus-circle me-2"></i>เพิ่มอุปกรณ์
+                        </a>
+                        <a class="nav-link" href="#" onclick="showBorrowReturn()">
+                            <i class="fas fa-exchange-alt me-2"></i>เบิก-คืนอุปกรณ์
+                        </a>
+                        <a class="nav-link" href="#" onclick="showReports()">
+                            <i class="fas fa-chart-bar me-2"></i>รายงาน
+                        </a>
+                        <a class="nav-link" href="#" onclick="showAuditSchedule()">
+                            <i class="fas fa-calendar-check me-2"></i>ตรวจสอบสินทรัพย์
+                        </a>
+                        <a class="nav-link" href="#" onclick="showWarrantyAlert()">
+                            <i class="fas fa-exclamation-triangle me-2"></i>แจ้งเตือนการรับประกัน
+                        </a>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-lg-10">
+                <div class="main-content">
+ 
+  <?!=include('pageDashboard');?>
+  <?!=include('pageEquipmentList');?>
+
+
+
+  <?!=include('pageAddequipment');?>
+  <?!=include('pageBorrowreturn');?>
+  <?!=include('pageReports');?>
+  <?!=include('pageAuditschedule');?>
+  <?!=include('pageWarrantyalert');?>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+      <footer class="py-4 bg-light mt-auto">
+        <div class="container-fluid px-4">
+          <div class="d-flex align-items-center justify-content-between small">
+            <div class="text-muted">
+              Copyright©School of Industrial Education and Technology. All Rights Reserved.
+              <!-- <script>
+                document.write(new Date().getFullYear());
+              </script> -->
+            </div>
+            <div>
+              ผู้จัดทำ <i class="fa fa-star"></i>
+              งานเทคโนโลยีสารสนเทศ | คณะครุศาสตร์อุตสาหกรรมและเทคโนโลยี
+            </div>
+          </div>
+        </div>
+      </footer>
+</div>
+
+<script>
+    // document.addEventListener("DOMContentLoaded", function() {
+    //   const user = JSON.parse(localStorage.getItem("loginUser"));
+    //   if (user) {
+    //      $("#webSection").show();
+    //   } else {
+    //     openLoginModal(); // แสดง modal login อยู่หน้า dashboard
+    //     $("#webSection").hide();
+    //   }
+    // });
+
+
+
+    // document.addEventListener("DOMContentLoaded", function() {
+    //   // 🔑 ลบการตรวจสอบ localStorage และเรียกฟังก์ชัน Login ทันที
+    //   // ทำให้ต้อง Login ใหม่ทุกครั้งที่เปิดหน้าเว็บ
+    //   document.getElementById('webSection').style.display = 'block'; 
+    //   openLoginModal(); 
+    // });
+
+
+
+    document.addEventListener("DOMContentLoaded", function() {
+
+        const statusUser = sessionStorage.getItem("statusUser")?.split(",") || [];
+  // const status = statusUser[4] || "";
+  // const fullname = statusUser[3] || "";
+  // const photo = statusUser[5] || "";
+        if (statusUser) {
+         document.getElementById('webSection').style.display = 'block'; 
+      } else {
+        openLoginModal(); // แสดง modal login อยู่หน้า dashboard
+        document.getElementById('webSection').style.display = 'block'; 
+      }
+
+
+
+      // 🔑 ลบการตรวจสอบ localStorage และเรียกฟังก์ชัน Login ทันที
+      // ทำให้ต้อง Login ใหม่ทุกครั้งที่เปิดหน้าเว็บ
+      // document.getElementById('webSection').style.display = 'block'; 
+      // openLoginModal(); 
+    });
+
+
+
+
+    // ✅ SweetAlert2 Login
+    // function openLoginModal() {
+    //   Swal.fire({
+    //     title: 'เข้าสู่ระบบ',
+    //     html:
+    //       '<input id="swal-username" class="swal2-input" placeholder="Username">' +
+    //       '<input id="swal-password" type="password" class="swal2-input" placeholder="Password">',
+    //     confirmButtonText: 'เข้าสู่ระบบ',
+    //     focusConfirm: false,
+    //     allowOutsideClick: false, // ป้องกันการปิด modal โดยคลิกข้างนอก
+    //     allowEscapeKey: false, // ป้องกันการปิด modal ด้วยปุ่ม Esc
+    //     preConfirm: () => {
+    //       const username = document.getElementById('swal-username').value.trim();
+    //       const password = document.getElementById('swal-password').value.trim();
+    //       if (!username || !password) {
+    //         Swal.showValidationMessage('⚠ กรุณากรอก Username และ Password');
+    //         return false;
+    //       }
+    //       return { username, password };
+    //     }
+    //   }).then((result) => {
+    //     if (result.isConfirmed) {
+    //       const { username, password } = result.value;
+          
+    //       // --- ส่วนนี้คือการเรียก Google Apps Script (สมมติว่าทำงานถูกต้อง) ---
+    //       google.script.run.withSuccessHandler(function(res){
+    //         if (res.success) {
+    //           // 🔑 ไม่ต้องบันทึกลง localStorage แล้ว
+    //           // localStorage.setItem("loginUser", JSON.stringify(res)); 
+              
+    //           $("#webSection").show();
+              
+    //           Swal.fire({
+    //             icon: 'success',
+    //             title: 'ยินดีต้อนรับ ' + res.fullname,
+    //             showConfirmButton: false,
+    //             timer: 1500
+    //           });
+    //         } else {
+    //           Swal.fire({
+    //             icon: 'error',
+    //             title: 'เข้าสู่ระบบไม่สำเร็จ',
+    //             text: 'Username หรือ Password ไม่ถูกต้อง',
+    //             confirmButtonText: 'ลองใหม่'
+    //           }).then(() => {
+    //             openLoginModal(); // ถ้าผิดพลาด ให้เปิด modal login อีกครั้ง
+    //           });
+    //         }
+    //       }).checkLogin(username, password);
+    //       // --------------------------------------------------------------------
+
+    //     }
+    //   });
+    // }
+
+// ✅ SweetAlert2 Login (เวอร์ชันเพิ่มตัวดีบัก)
+// function openLoginModal() {
+
+//     // --- นักสืบตัวที่ 1 ---
+//   console.log("Attempting to open login modal...");
+
+//   Swal.fire({
+//     title: 'เข้าสู่ระบบ',
+//     html:
+//       '<input id="swal-username" class="swal2-input" placeholder="Username">' +
+//       '<input id="swal-password" type="password" class="swal2-input" placeholder="Password">',
+//     confirmButtonText: 'เข้าสู่ระบบ',
+//     focusConfirm: false,
+//     allowOutsideClick: false,
+//     allowEscapeKey: false,
+//     preConfirm: () => {
+//       const username = document.getElementById('swal-username').value.trim();
+//       const password = document.getElementById('swal-password').value.trim();
+//       if (!username || !password) {
+//         Swal.showValidationMessage('⚠ กรุณากรอก Username และ Password');
+//         return false;
+//       }
+//       return { username, password };
+//     }
+//   }).then((result) => {
+//     if (result.isConfirmed) {
+//       const { username, password } = result.value;
+      
+//       google.script.run.withSuccessHandler(function(res){
+        
+//         // 💡💡💡 เพิ่มบรรทัดนี้เพื่อดูข้อมูลที่ได้รับจาก Apps Script 💡💡💡
+//         console.log("Data received from Google Apps Script:", res);
+
+//         if (res && res.success) { // เพิ่มการตรวจสอบ res เพื่อความปลอดภัย
+//           // โค้ดเดิมที่ใช้อัปเดตชื่อผู้ใช้, รูปภาพ ฯลฯ
+//     document.getElementById("welcome").innerText = "ยินดีต้อนรับ " + res.fullname;
+//     document.getElementById("userStatus").innerText = "สถานะ: " + res.status;
+//     document.getElementById("userPhoto").src = res.photo || "https://via.placeholder.com/80";
+    
+//     // ✅ บรรทัดสำคัญ: สั่งให้ webSection แสดงขึ้นมา
+//     document.getElementById('webSection').style.display = 'block'; 
+
+//               // ✅ เก็บข้อมูล user ไว้ในตัวแปร global
+//           currentUserData = res;
+
+//           // ✅ อัปเดตชื่อใน navbar
+//           document.getElementById("currentUser").innerText = res.fullname;
+
+
+// //set session
+// // ✅ ถ้ามีข้อมูล → สร้าง session
+//                 const id = res.id || "ldap";
+//                 const usename = res.username || ldapEmail;
+//                 const pass = "-";
+//                 const fullname = res.fullname;
+//                 const status = res.status;
+//                 const photo = res.photo || "ldapPhoto";
+
+//                 const sessionString = `${id},${usename},${pass},${fullname},${status},${photo}`;
+//                 sessionStorage.setItem("statusUser", sessionString);
+
+
+
+          
+//           Swal.fire({
+//             icon: 'success',
+//             title: 'ยินดีต้อนรับ ' + res.fullname,
+//             showConfirmButton: false,
+//             timer: 1500
+//           });
+//         } else {
+//           Swal.fire({
+//             icon: 'error',
+//             title: 'เข้าสู่ระบบไม่สำเร็จ',
+//             text: 'Username หรือ Password ไม่ถูกต้อง',
+//             confirmButtonText: 'ลองใหม่'
+//           }).then(() => {
+//             openLoginModal();
+//           });
+//         }
+//       }).checkLogin(username, password);
+//     }
+//   });
+//     // --- นักสืบตัวที่ 2 ---
+//   console.log("SweetAlert2 'fire' command has been executed.");
+// }
+
+// function openLoginModal() {
+//   console.log("Attempting to open login modal...");
+
+//   Swal.fire({
+//     title: '<h2 style="color:#333; font-weight:600;">🔐 เข้าสู่ระบบ</h2>',
+//     html: `
+//       <div style="display:flex; flex-direction:column; align-items:center; gap:15px; padding:10px 0;">
+//         <input id="swal-username" class="swal2-input" placeholder="👤 Username" style="width:90%; text-align:center; font-size:15px;">
+//         <input id="swal-password" type="password" class="swal2-input" placeholder="🔑 Password" style="width:90%; text-align:center; font-size:15px;">
+//       </div>
+//     `,
+//     confirmButtonText: '🚀 เข้าสู่ระบบ',
+//     confirmButtonColor: '#3085d6',
+//     focusConfirm: false,
+//     allowOutsideClick: false,
+//     allowEscapeKey: false,
+//     showCloseButton: true,
+//     background: '#fefefe',
+//     customClass: {
+//       popup: 'swal2-rounded swal2-shadow'
+//     },
+//     preConfirm: () => {
+//       const username = document.getElementById('swal-username').value.trim();
+//       const password = document.getElementById('swal-password').value.trim();
+//       if (!username || !password) {
+//         Swal.showValidationMessage('⚠ กรุณากรอก Username และ Password');
+//         return false;
+//       }
+//       return { username, password };
+//     }
+//   }).then((result) => {
+//     if (result.isConfirmed) {
+//       const { username, password } = result.value;
+
+//       google.script.run.withSuccessHandler(function(res) {
+//         console.log("Data received from Google Apps Script:", res);
+
+//         if (res && res.success) {
+//           // ✅ อัปเดต UI
+//           document.getElementById("welcome").innerText = "ยินดีต้อนรับ " + res.fullname;
+//           document.getElementById("userStatus").innerText = "สถานะ: " + res.status;
+//           document.getElementById("userPhoto").src = res.photo || "https://via.placeholder.com/80";
+//           document.getElementById('webSection').style.display = 'block'; 
+//           currentUserData = res;
+//           document.getElementById("currentUser").innerText = res.fullname;
+
+//           // ✅ sessionStorage
+//           const id = res.id || "ldap";
+//           const usename = res.username || "ldapEmail";
+//           const pass = "-";
+//           const fullname = res.fullname;
+//           const status = res.status;
+//           const photo = res.photo || "ldapPhoto";
+//           const sessionString = `${id},${usename},${pass},${fullname},${status},${photo}`;
+//           sessionStorage.setItem("statusUser", sessionString);
+
+//           Swal.fire({
+//             icon: 'success',
+//             title: '🎉 ยินดีต้อนรับ ' + res.fullname,
+//             showConfirmButton: false,
+//             timer: 1500
+//           });
+//         } else {
+//           Swal.fire({
+//             icon: 'error',
+//             title: 'เข้าสู่ระบบไม่สำเร็จ',
+//             text: 'Username หรือ Password ไม่ถูกต้อง',
+//             confirmButtonText: 'ลองใหม่'
+//           }).then(() => {
+//             openLoginModal();
+//           });
+//         }
+//       }).checkLogin(username, password);
+//     }
+//   });
+//   console.log("SweetAlert2 'fire' command has been executed.");
+// }
+
+//เพิ่ม ระหว่างรอ
+function openLoginModal() {
+  console.log("Attempting to open login modal...");
+
+  Swal.fire({
+    title: '<h2 style="color:#333; font-weight:600;">🔐 เข้าสู่ระบบ</h2>',
+    html: `
+      <div style="display:flex; flex-direction:column; align-items:center; gap:15px; padding:10px 0;">
+        <input id="swal-username" class="swal2-input" placeholder="👤 Username" style="width:90%; text-align:center; font-size:15px;">
+        <input id="swal-password" type="password" class="swal2-input" placeholder="🔑 Password" style="width:90%; text-align:center; font-size:15px;">
+      </div>
+    `,
+    confirmButtonText: '🚀 เข้าสู่ระบบ',
+    confirmButtonColor: '#3085d6',
+    focusConfirm: false,
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    showCloseButton: false,
+    background: '#fefefe',
+    customClass: {
+      popup: 'swal2-rounded swal2-shadow'
+    },
+    preConfirm: () => {
+      const username = document.getElementById('swal-username').value.trim();
+      const password = document.getElementById('swal-password').value.trim();
+      if (!username || !password) {
+        Swal.showValidationMessage('⚠ กรุณากรอก Username และ Password');
+        return false;
+      }
+      return { username, password };
+    }
+  }).then((result) => {
+    if (result.isConfirmed) {
+      const { username, password } = result.value;
+
+      // --- ✨ ส่วนที่เพิ่มเข้ามา: แสดงหน้าต่าง "กำลังโหลด" ---
+      Swal.fire({
+        title: 'กำลังตรวจสอบข้อมูล',
+        text: 'กรุณารอสักครู่...',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => {
+          Swal.showLoading(); // แสดงไอคอนหมุนๆ
+        }
+      });
+      // --- สิ้นสุดส่วนที่เพิ่มเข้ามา ---
+
+      google.script.run.withSuccessHandler(function(res) {
+        console.log("Data received from Google Apps Script:", res);
+
+        if (res && res.success) {
+          // ✅ อัปเดต UI (โค้ดส่วนนี้เหมือนเดิม)
+          document.getElementById("welcome").innerText = "ยินดีต้อนรับ " + res.fullname;
+          document.getElementById("userStatus").innerText = "สถานะ: " + res.status;
+          document.getElementById("userPhoto").src = res.photo || "https://via.placeholder.com/80";
+          document.getElementById('webSection').style.display = 'block';  
+          document.getElementById("currentUser").innerText = res.fullname;
+
+          // ✅ sessionStorage (โค้ดส่วนนี้เหมือนเดิม)
+          const id = res.id || "ldap_user";
+          const sessionUsername = res.username || username;
+          const pass = "-";
+          const fullname = res.fullname;
+          const status = res.status;
+          const photo = res.photo || "https://via.placeholder.com/80";
+          const sessionString = `${id},${sessionUsername},${pass},${fullname},${status},${photo}`;
+          sessionStorage.setItem("statusUser", sessionString);
+
+          // หน้าต่าง Loading จะถูกแทนที่ด้วยหน้าต่าง Success นี้โดยอัตโนมัติ
+          Swal.fire({
+            icon: 'success',
+            title: '🎉 ยินดีต้อนรับ ' + res.fullname,
+            showConfirmButton: false,
+            timer: 1500
+          });
+
+        } else {
+          // หน้าต่าง Loading จะถูกแทนที่ด้วยหน้าต่าง Error นี้โดยอัตโนมัติ
+          Swal.fire({
+            icon: 'error',
+            title: 'เข้าสู่ระบบไม่สำเร็จ',
+            text: res.message || 'Username หรือ Password ไม่ถูกต้อง',
+            confirmButtonText: 'ลองใหม่'
+          }).then(() => {
+            openLoginModal(); // เปิด Modal ให้ลองใหม่อีกครั้ง
+          });
+        }
+      }).withFailureHandler(function(error) {
+          console.error("Google Script Run Error:", error);
+           // หน้าต่าง Loading จะถูกแทนที่ด้วยหน้าต่าง Error นี้โดยอัตโนมัติ
+           Swal.fire({
+            icon: 'error',
+            title: 'เกิดข้อผิดพลาด',
+            text: 'ไม่สามารถติดต่อกับ Server ได้: ' + error.message,
+            confirmButtonText: 'ลองใหม่'
+          });
+      }).checkLogin(username, password);
+    }
+  });
+}
+
+
+// ✅ แสดง Dashboard (เวอร์ชันปรับปรุงให้ปลอดภัยขึ้น)
+function showDashboard(user) {
+  // ดึง Element มาเก็บในตัวแปร
+  const welcomeEl = document.getElementById("welcome");
+  const statusEl = document.getElementById("userStatus");
+  const photoEl = document.getElementById("userPhoto");
+  const webSectionEl = document.getElementById("webSection");
+
+  // --- ตรวจสอบทีละส่วนว่าหาเจอหรือไม่ ก่อนสั่งงาน ---
+  
+  if (welcomeEl) {
+    welcomeEl.innerText = "ยินดีต้อนรับ " + user.fullname;
+  } else {
+    console.error("หา Element ที่มี id='welcome' ไม่เจอ!");
+  }
+
+  if (statusEl) {
+    statusEl.innerText = "สถานะ: " + user.status;
+  } else {
+    console.error("หา Element ที่มี id='userStatus' ไม่เจอ!");
+  }
+
+  if (photoEl) {
+    photoEl.src = user.photo || "https://via.placeholder.com/80";
+  } else {
+    console.error("หา Element ที่มี id='userPhoto' ไม่เจอ!");
+  }
+  
+  if (webSectionEl) {
+    webSectionEl.classList.remove("hidden");
+  } else {
+    console.error("หา Element ที่มี id='webSection' ไม่เจอ!");
+  }
+}
+
+ // ✅ Logout
+    // function logout() {
+    //   // 🔑 ไม่ต้องลบ localStorage เพราะไม่ได้บันทึกไว้แล้ว
+    //   // localStorage.removeItem("loginUser");
+      
+    //   // ซ่อน Dashboard และเคลียร์ข้อมูล
+    //   $("#webSection").hide();
+    //   showDashboard({ fullname: "", status: "", photo: "" }); 
+      
+    //   // กลับไปหน้า Login
+    //   openLoginModal();
+    // }
+
+
+
+// ✅ Logout (เวอร์ชันแก้ไข)
+// // ✅ Logout (เวอร์ชันสำหรับดีบัก)
+// function logout() {
+//   // --- จุดที่ 1 ---
+//   console.log("1. เริ่มทำงานฟังก์ชัน logout");
+
+//   const webSectionEl = document.getElementById("webSection");
+
+//   if (webSectionEl) {
+//     webSectionEl.classList.add("hidden");
+//     // --- จุดที่ 2 ---
+//     console.log("2. ซ่อน Dashboard สำเร็จ");
+//   } else {
+//     console.error("หา id='webSection' ไม่เจอ!");
+//   }
+
+//   // --- จุดที่ 3 ---
+//   console.log("3. กำลังจะเรียก openLoginModal()...");
+  
+//   try {
+//     openLoginModal();
+//     // --- จุดที่ 4 ---
+//     console.log("4. เรียก openLoginModal() ไปแล้ว (ไม่มี error)");
+//   } catch (e) {
+//     console.error("เกิด Error ร้ายแรงตอนพยายามเปิด Modal Login:", e);
+//   }
+// }
+
+
+// ✅ ฟังก์ชัน Logout ที่ถูกต้องสำหรับโครงสร้างนี้
+// function logout() {
+//   // 1. ซ่อนเนื้อหาทั้งหมด โดยการซ่อน div หลัก
+//   document.getElementById('webSection').style.display = 'none';
+
+//   // 2. เรียก Modal Login ขึ้นมาใหม่
+//   openLoginModal();
+// }
+
+
+/**
+ * ฟังก์ชันสำหรับออกจากระบบ
+ */
+// function logout() {
+//   // 1. ซ่อน (เกิดขึ้นทันที)
+//   // document.getElementById('webSection').style.display = 'none';
+  
+//   // 2. เรียก Login (แสดงผลต่อทันที)
+//   openLoginModal();
+// }
+
+
+</script>
+
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+<!-- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9794a454215f7331',t:'MTc1Njg5NjE2Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script> -->
+
+    <?!= include('JavaScript'); ?>
+</body>
+</html>
