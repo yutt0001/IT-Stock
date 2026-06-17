@@ -2,7 +2,7 @@
 // 1. การตั้งค่าระบบ API
 // ==========================================
 // *** นำ URL ของ Web App ใหม่มาใส่ตรงนี้ ***
-const API_URL = "https://script.google.com/a/macros/kmitl.ac.th/s/AKfycbwdXiJ8jXtp_bLPj-qehDmsVMPMD6AzyiS4LmS1ty9Ck-qn3ZZn5gSYmKxnrczjAvSn-w/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwdXiJ8jXtp_bLPj-qehDmsVMPMD6AzyiS4LmS1ty9Ck-qn3ZZn5gSYmKxnrczjAvSn-w/exec";
 
 async function callBackend(actionName, payloadData = {}) {
     try {
