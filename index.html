@@ -133,7 +133,11 @@
                                     <div class="col-md-6"><label class="form-label">สถานที่เก็บ *</label><select class="form-select" id="Location" required></select></div>
                                     <div class="col-md-6"><label class="form-label">ตำแหน่งเก็บ</label><input type="text" class="form-control" id="equipmentLocation" placeholder="ตู้ / ตำแหน่ง"></div>
                                     <div class="col-md-12"><label class="form-label">หมายเหตุ</label><textarea class="form-control" id="notes" rows="2"></textarea></div>
-                                    <div class="col-md-12"><label class="form-label">รูปภาพอุปกรณ์</label><input type="file" class="form-control" id="equipmentImage" accept="image/*"></div>
+                                    <!-- <div class="col-md-12"><label class="form-label">รูปภาพอุปกรณ์</label><input type="file" class="form-control" id="equipmentImage" accept="image/*"></div> -->
+                                    <div class="col-md-12">
+                                        <label class="form-label">รูปภาพอุปกรณ์</label>
+                                        <input type="file" class="form-control" id="equipmentImage" accept="image/*" capture="environment">
+                                    </div>
                                 </div>
                                 <div class="text-end mt-4">
                                     <button type="button" class="btn btn-secondary me-2" onclick="showPage('equipmentListSection')">ยกเลิก</button>
