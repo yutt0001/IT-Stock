@@ -421,17 +421,21 @@ async function deleteEquipment(itemId) {
 async function loadCategories() {
     try {
         const res = await callBackend('getCategories');
+        console.log("📌 ข้อมูลที่โหลดมาจาก Config:", res); // ปริ้นข้อมูลให้ดูใน Console (กด F12 เพื่อดูได้)
         
-        // ชี้เป้าให้ตรงกับโครงสร้างข้อมูลที่ถูกห่อไว้ใน res.data (ถ้ามี)
+        // ถ้าระบบหลังบ้านตอบกลับมาว่ามี Error (เช่น หาชีตไม่เจอ)
+        if (res && res.success === false) {
+            Swal.fire('แจ้งเตือนการตั้งค่า', 'ไม่สามารถโหลดหมวดหมู่ได้: ' + res.message, 'warning');
+            return;
+        }
+
         const catData = res.data ? res.data : res;
 
-        // สร้างฟังก์ชันวาด Dropdown (เพิ่มบรรทัด if (!arr) return; เพื่อป้องกัน Error .map)
         const setSel = (id, arr, p) => { 
-            if (!arr) return; 
+            if (!arr || !Array.isArray(arr)) return; 
             document.getElementById(id).innerHTML = `<option value="">${p}</option>` + arr.map(a => `<option value="${a}">${a}</option>`).join(''); 
         };
 
-        // ส่งข้อมูลไปวาดลง Dropdown แต่ละช่อง
         setSel('equipmentType', catData.ItemCategory, 'เลือกประเภท');
         setSel('equipmentStatus', catData.Status, 'เลือกสถานะ');
         setSel('Unit', catData.Unit, 'เลือกหน่วย');
