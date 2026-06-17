@@ -1,0 +1,297 @@
+<!-- Add Equipment -->
+                    <div id="addEquipmentSection" style="display: none;">
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h2><i class="fas fa-plus-circle me-2"></i>เพิ่มอุปกรณ์ใหม่</h2>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0 text-white">ข้อมูลอุปกรณ์</h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="addEquipmentForm">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">รหัสอุปกรณ์</label>
+                                                <input type="text" class="form-control" id="equipmentId" disabled>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">ชื่ออุปกรณ์ *</label>
+                                                <input type="text" class="form-control" id="equipmentName" required>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label class="form-label">ประเภท *</label>
+                                                <select class="form-select" id="equipmentType" required></select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label class="form-label">Serial Number / Asset Code</label>
+                                                <input type="text" class="form-control" id="serialNumber">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label class="form-label">สถานะ *</label>
+                                                <select class="form-select" id="equipmentStatus" required></select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="mb-3">
+                                                <label class="form-label">ราคาต่อหน่วย (บาท)</label>
+                                                <input type="number" class="form-control" id="unitPrice" step="0.01">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="mb-3">
+                                                <label class="form-label">จำนวน *</label>
+                                                <input type="number" class="form-control" id="quantity" required min="1">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="mb-3">
+                                                <label class="form-label">หน่วยนับ *</label>
+                                                <select class="form-select" id="Unit" required></select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="mb-3">
+                                                <label class="form-label">มูลค่ารวม (บาท)</label>
+                                                <input type="number" class="form-control" id="totalValue" readonly>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Vendor / แหล่งที่มา</label>
+                                                <input type="text" class="form-control" id="vendor">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">ผู้รับผิดชอบหลัก</label>
+                                                <input type="text" class="form-control" id="responsible">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label class="form-label">วันที่ซื้อ / รับเข้าคลัง</label>
+                                                <input type="date" class="form-control" id="purchaseDate">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label class="form-label">วันหมดอายุการรับประกัน</label>
+                                                <input type="date" class="form-control" id="warrantyExpire">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label class="form-label">วันที่ตรวจสอบสินทรัพย์ครั้งต่อไป</label>
+                                                <input type="date" class="form-control" id="auditDate">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                      <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">สถานที่เก็บ *</label>
+                                                <select class="form-select" id="Location" required></select>
+                                            </div>
+                                        </div>
+    
+
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">ตำแหน่งเก็บ</label>
+                                                <input type="text" class="form-control" id="equipmentLocation" placeholder=" ตู้ / ตำแหน่งเก็บ">
+                                            </div>
+                                        </div>
+                                    </div>
+                                        <div class="col-md-12">
+                                            <div class="mb-3">
+                                                <label class="form-label">หมายเหตุ</label>
+                                                <textarea class="form-control" id="notes" rows="3"></textarea>
+                                            </div>
+                                        </div>
+
+
+
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="mb-3">
+                                                <label class="form-label">รูปภาพอุปกรณ์</label>
+                                                <input type="file" class="form-control" id="equipmentImage" accept="image/*">
+                                            </div>
+                                        </div>
+ 
+                                    </div>
+
+                                    <div class="text-end">
+                                        <button type="button" class="btn btn-secondary me-2" onclick="showEquipmentList()">ยกเลิก</button>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save me-2"></i>บันทึกข้อมูล
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+ <script>
+  google.script.run.withSuccessHandler(onCategoriesLoaded).getCategories();
+function onCategoriesLoaded(result) {
+  if (!result.success) {
+    console.error("โหลด categories error:", result.message);
+    return;
+  }
+
+  const cats = result.data;
+fillSelect("equipmentType", cats.ItemCategory, "เลือกประเภท");
+fillSelect("equipmentStatus", cats.Status, "เลือกสถานะ");
+fillSelect("Unit", cats.Unit, "เลือกหน่วยนับ");
+fillSelect("Location", cats.Location, "เลือกสถานที่เก็บ");
+}
+
+function fillSelect(id, items, placeholder) {
+  const select = document.getElementById(id);
+  select.innerHTML = ""; // clear
+
+  if (placeholder) {
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = placeholder;
+    select.appendChild(opt);
+  }
+
+  items.forEach(item => {
+    const opt = document.createElement("option");
+    opt.value = item;
+    opt.textContent = item;
+    select.appendChild(opt);
+  });
+}
+</script>
+
+<script>
+document.getElementById("addEquipmentForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+
+    // ดึงชื่อผู้ใช้งานจาก sessionStorage
+    const statusUser = sessionStorage.getItem("statusUser")?.split(",") || [];
+    const fullname = statusUser[3] || "N/A"; // ใส่ N/A หากไม่มีข้อมูล
+
+  // เก็บค่าจากฟอร์ม
+  const equipment = {
+    name: document.getElementById("equipmentName").value,
+    type: document.getElementById("equipmentType").value,
+    serial: document.getElementById("serialNumber").value,
+    status: document.getElementById("equipmentStatus").value,
+    unitPrice: parseFloat(document.getElementById("unitPrice").value) || 0,
+    quantity: parseInt(document.getElementById("quantity").value) || 0,
+    unit: document.getElementById("Unit").value,
+    totalValue: parseFloat(document.getElementById("totalValue").value) || 0,
+    vendor: document.getElementById("vendor").value,
+    responsible: document.getElementById("responsible").value,
+    purchaseDate: document.getElementById("purchaseDate").value,
+    warrantyExpire: document.getElementById("warrantyExpire").value,
+    auditDate: document.getElementById("auditDate").value,
+    location: document.getElementById("Location").value,
+    locationDetail: document.getElementById("equipmentLocation").value,
+    notes: document.getElementById("notes").value,
+    createdBy: fullname,
+    imageUrl: "" // ภายหลังถ้าอัพโหลดไฟล์จะเก็บลิงก์ตรงนี้
+  };
+
+  // ✅ ต้องประกาศ file ก่อน
+  const fileInput = document.getElementById("equipmentImage");
+  const file = fileInput.files[0];
+  
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const base64Data = e.target.result;
+
+      // อัปโหลดไป Drive ก่อน
+      google.script.run.withSuccessHandler(function(res) {
+        if (res.success) {
+          equipment.imageUrl = res.url;
+
+          // บันทึกลง Sheet
+          saveEquipment(equipment);
+        } else {
+          Swal.fire({ icon: "error", title: "อัปโหลดรูปผิดพลาด", text: res.message });
+        }
+      }).uploadImageAndSave(base64Data, file.name);
+    };
+    reader.readAsDataURL(file);
+  } else {
+    // ถ้าไม่เลือกไฟล์ → บันทึกตรงเลย
+    saveEquipment(equipment);
+  }
+});
+
+// ฟังก์ชันบันทึกข้อมูลไปยัง Google Sheet
+function saveEquipment(equipment) {
+  google.script.run.withSuccessHandler(function(result) {
+    if (result.success) {
+      Swal.fire({ icon: "success", title: "สำเร็จ", text: result.message })
+      .then(() => {
+        showEquipmentList();
+      });
+    } else {
+      Swal.fire({ icon: "error", title: "ผิดพลาด", text: result.message });
+    }
+  }).addEquipment(equipment);
+}
+
+//   // เรียกไปบันทึกใน Google Sheet
+//   google.script.run.withSuccessHandler(function(result) {
+//     if (result.success) {
+//       Swal.fire({
+//         icon: "success",
+//         title: "สำเร็จ",
+//         text: result.message
+//       }).then(() => {
+//         showEquipmentList(); // กลับไปหน้ารายการ
+//       });
+//     } else {
+//       Swal.fire({
+//         icon: "error",
+//         title: "ผิดพลาด",
+//         text: result.message
+//       });
+//     }
+//   }).addEquipment(equipment);
+// });
+</script>
+<script>
+function calcTotal() {
+  const price = parseFloat(document.getElementById("unitPrice").value) || 0;
+  const qty = parseInt(document.getElementById("quantity").value) || 0;
+  document.getElementById("totalValue").value = (price * qty).toFixed(2);
+}
+
+document.getElementById("unitPrice").addEventListener("input", calcTotal);
+document.getElementById("quantity").addEventListener("input", calcTotal);
+</script>
+
+

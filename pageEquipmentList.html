@@ -1,0 +1,600 @@
+                    <!-- Equipment List -->
+                    <div id="equipmentListSection" style="display: none;">
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h2><i class="fas fa-list me-2"></i>รายการอุปกรณ์</h2>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <button class="btn btn-primary" onclick="showAddEquipment()">
+                                    <i class="fas fa-plus me-2"></i>เพิ่มอุปกรณ์ใหม่
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Search and Filter -->
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-12 col-md-4"><input class="form-control" id="keyword" placeholder="ค้นหาชื่อ, รหัส, S/N, สถานที่..." /></div>
+                                    <div class="col-6 col-md-2"><select class="form-select" id="category"><option>ทั้งหมด</option></select></div>
+                                    <div class="col-6 col-md-2"><select class="form-select" id="status"><option>ทั้งหมด</option></select></div>
+                                    <div class="col-6 col-md-2"><select class="form-select" id="location"><option>ทั้งหมด</option></select></div>
+                                    <div class="col-6 col-md-2 d-grid d-md-flex justify-content-md-end"><button class="btn btn-success me-md-2" id="btnSearch">ค้นหา</button><button class="btn btn-secondary" id="btnReset">ล้างค่า</button></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Equipment Table -->
+                        <!-- <div class="card">
+                            <div class="card-body">
+                                  <div class="d-block d-md-none mb-3" id="cardView">
+                                <p class="text-center">กำลังโหลดข้อมูล...</p>
+                                </div>
+                       
+
+                                <div class="d-none d-md-block">
+                                <div class="table-responsive">
+                                <table class="table table-bordered table-hover align-middle text-center">
+                                  <thead>
+                                    <tr>
+                                      <th>รูปภาพ</th>
+                                      <th>ชื่ออุปกรณ์</th>
+                                      <th>ประเภท</th>
+                                      <th>S/N</th>
+                                      <th>สถานะ</th>
+                                      <th>จำนวนคงเหลือ</th>
+                                      <th>สถานที่เก็บ</th>
+                                      <th>ผู้รับผิดชอบ</th>
+                                      <th>วันหมดประกัน</th>
+                                      <th>การจัดการ</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody id="tableBody">
+                                    <tr>
+                                      <td colspan="9">กำลังโหลดข้อมูล...</td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+                                </div>
+                                </div>
+                            </div>
+                        </div> -->
+
+  <div class="card">
+    <div class="card-body">
+        <div class="d-block d-md-none mb-3" id="cardView">
+            <p class="text-center">กำลังโหลดข้อมูล...</p>
+        </div>
+        <div class="d-none d-md-block">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle text-center">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>รูป</th>
+                            <th>ชื่ออุปกรณ์</th>
+                            <th>ประเภท</th>
+                            <th>S/N</th>
+                            <th>สถานะ</th>
+                            <th>จำนวน</th>
+                            <th>สถานที่</th>
+                            <th>ผู้รับผิดชอบ</th>
+                            <th>หมดประกัน</th>
+                            <th>จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr>
+                            <td colspan="10">กำลังโหลดข้อมูล...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+                    </div>
+
+<!-- Equipment Detail Modal -->
+    <div class="modal fade" id="equipmentDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-info-circle me-2"></i>รายละเอียดอุปกรณ์</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="equipmentDetailContent">
+                    <!-- Equipment details will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>      
+
+
+        <!-- Edit Equipment Modal -->
+    <div class="modal fade" id="editEquipmentModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-edit me-2"></i>แก้ไขข้อมูลอุปกรณ์</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editEquipmentForm">
+                        <!-- Edit form fields will be similar to add form -->
+                        <div class="text-end">
+                            <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">ยกเลิก</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>บันทึกการแก้ไข
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+  
+  <script>
+    let allData = [];
+
+    function showError(err) {
+      console.error(err);
+      Swal.fire({ icon: "error", title: "เกิดข้อผิดพลาด", text: String(err) });
+      document.getElementById("tableBody").innerHTML = `<tr><td colspan="9">ไม่สามารถโหลดข้อมูลได้</td></tr>`;
+    }
+
+    function loadData() {
+      const filters = {
+        keyword: document.getElementById("keyword").value.trim(),
+        category: document.getElementById("category").value,
+        status: document.getElementById("status").value,
+        location: document.getElementById("location").value
+      };
+
+      document.getElementById("tableBody").innerHTML = `<tr><td colspan="9">กำลังโหลดข้อมูล...</td></tr>`;
+
+      google.script.run
+        .withSuccessHandler(displayData)
+        .withFailureHandler(showError)
+        .getInventoryData(filters);
+    }
+
+    function displayData(data) {
+    allData = Array.isArray(data) ? data : [];
+
+    // ==== Table View ====
+    const tbody = document.getElementById("tableBody");
+    tbody.innerHTML = "";
+
+    // ==== Card View ====
+    const cardView = document.getElementById("cardView");
+    cardView.innerHTML = "";
+
+    if (!allData.length) {
+      tbody.innerHTML = `<tr><td colspan="9">ไม่พบข้อมูล</td></tr>`;
+      cardView.innerHTML = `<p class="text-center">ไม่พบข้อมูล</p>`;
+      return;
+    }
+
+    // ✅ set filter options
+    setOptions("category", unique(allData.map(d => d.Category)));
+    setOptions("status", unique(allData.map(d => d.Status)));
+    setOptions("location", unique(allData.map(d => d.Location)));
+
+    // ✅ Loop ข้อมูล
+    allData.forEach(item => {
+      const img = item.ImageURL ? item.ImageURL : "https://via.placeholder.com/60";
+
+      // --- Table Row ---
+      const row = `
+        <tr>
+          <td><img src="${img}" style="max-width:60px" onerror="this.src='https://via.placeholder.com/60'"></td>
+          <td class="text-start">${sanitize(item.Name)}</td>
+          <td>${sanitize(item.Category)}</td>
+          <td>${sanitize(item.SerialNumber)}</td>
+          <td>${sanitize(item.Status)}</td>
+          <td>${sanitize(item.Quantity)}</td>
+          <td>${sanitize(item.Location)}</td>
+          <td>${sanitize(item.Custodian)}</td>
+          <td>${sanitize(item.WarrantyExpireDate)}</td>
+          <td>
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="viewEquipmentDetail('${item.ItemID}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-warning me-1" onclick="editEquipment('${item.ItemID}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteEquipment('${item.ItemID}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+        </tr>`;
+      tbody.innerHTML += row;
+
+      // --- Card Item ---
+      const card = `
+        <div class="card mb-2 shadow-sm">
+          <div class="row g-0">
+            <div class="col-4">
+              <img src="${img}" class="img-fluid rounded-start" onerror="this.src='https://via.placeholder.com/100'">
+            </div>
+            <div class="col-8">
+              <div class="card-body p-2">
+                <h6 class="fw-bold mb-1">${sanitize(item.Name)}</h6>
+                <p class="mb-1"><strong>ประเภท:</strong> ${sanitize(item.Category)}</p>
+                <p class="mb-1"><strong>S/N:</strong> ${sanitize(item.SerialNumber)}</p>
+                <p class="mb-1"><strong>สถานะ:</strong> ${sanitize(item.Status)}</p>
+                <p class="mb-1"><strong>จำนวน:</strong> ${sanitize(item.Quantity)}</p>
+                <p class="mb-1"><strong>สถานที่:</strong> ${sanitize(item.Location)}</p>
+                <p class="mb-0"><strong>ผู้รับผิดชอบ:</strong> ${sanitize(item.Custodian)}</p>
+              </div>
+            </div>
+          </div>
+        </div>`;
+      cardView.innerHTML += card;
+    });
+  }
+
+  // ✅ กัน XSS
+  function sanitize(str) {
+    return str ? String(str).replace(/[&<>"']/g, m => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+    }[m])) : "";
+  }
+
+  // ✅ ฟังก์ชัน set filter
+  function unique(arr) {
+    return [...new Set(arr.filter(Boolean))];
+  }
+
+  
+
+    function unique(arr) { return [...new Set(arr.filter(v => v && String(v).trim() !== ""))]; }
+    function setOptions(id, values) {
+      const el = document.getElementById(id);
+      const current = el.value;
+      el.innerHTML = `<option>ทั้งหมด</option>`;
+      values.forEach(v => el.innerHTML += `<option>${sanitize(v)}</option>`);
+      if ([...el.options].some(o => o.value === current)) el.value = current;
+    }
+    function sanitize(v) { return v == null ? "" : String(v); }
+
+    function resetFilters() {
+      document.getElementById("keyword").value = "";
+      document.getElementById("category").value = "ทั้งหมด";
+      document.getElementById("status").value = "ทั้งหมด";
+      document.getElementById("location").value = "ทั้งหมด";
+      loadData();
+    }
+
+    document.getElementById("btnSearch").addEventListener("click", loadData);
+    document.getElementById("btnReset").addEventListener("click", resetFilters);
+    document.getElementById("keyword").addEventListener("keydown", e => { if (e.key === "Enter") loadData(); });
+
+    window.onload = loadData;
+
+
+
+    //new จัดการ
+    /* =============================================
+   === โค้ดสำหรับจัดการ View, Edit, Delete ===
+   ============================================= */
+
+/**
+ * 👁️ แสดงรายละเอียดอุปกรณ์ใน Modal
+ */
+function viewEquipmentDetail(itemId) {
+  // ค้นหาข้อมูลจาก array `allData` ที่โหลดมาแล้ว
+  const item = allData.find(d => d.ItemID == itemId);
+  if (!item) {
+    showError("ไม่พบข้อมูลอุปกรณ์ที่ระบุ");
+    return;
+  }
+  
+  const img = item.ImageURL || "https://via.placeholder.com/200";
+
+  // สร้าง HTML สำหรับแสดงใน Modal body
+  const content = `
+    <div class="row">
+        <div class="col-md-4 text-center">
+            <img src="${img}" class="img-fluid rounded mb-3" onerror="this.src='https://via.placeholder.com/200'">
+        </div>
+        <div class="col-md-8">
+            <h4 class="mb-3">${sanitize(item.Name)}</h4>
+            <table class="table table-bordered">
+                <tbody>
+                    <tr><th class="w-25">รหัสอุปกรณ์</th><td>${sanitize(item.ItemID)}</td></tr>
+                    <tr><th>ประเภท</th><td>${sanitize(item.Category)}</td></tr>
+                    <tr><th>Serial Number</th><td>${sanitize(item.SerialNumber)}</td></tr>
+                    <tr><th>สถานะ</th><td>${sanitize(item.Status)}</td></tr>
+                    <tr><th>จำนวนคงเหลือ</th><td>${sanitize(item.Quantity)} ${sanitize(item.Unit)}</td></tr>
+                    <tr><th>สถานที่เก็บ</th><td>${sanitize(item.Location)}</td></tr>
+                    <tr><th>ผู้รับผิดชอบ</th><td>${sanitize(item.Custodian)}</td></tr>
+                    <tr><th>วันที่ซื้อ</th><td>${sanitize(item.PurchaseDate)}</td></tr>
+                    <tr><th>วันหมดประกัน</th><td>${sanitize(item.WarrantyExpireDate)}</td></tr>
+                    <tr><th>ตำแหน่งเก็บ</th><td>${sanitize(item.Notes)}</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+  `;
+
+  document.getElementById('equipmentDetailContent').innerHTML = content;
+  
+  // เรียกใช้งาน Bootstrap Modal
+  const detailModal = new bootstrap.Modal(document.getElementById('equipmentDetailModal'));
+  detailModal.show();
+}
+
+
+/**
+ * ✏️ แสดงฟอร์มแก้ไขข้อมูลใน Modal
+ */
+// function editEquipment(itemId) {
+//   const item = allData.find(d => d.ItemID == itemId);
+//   if (!item) {
+//     showError("ไม่พบข้อมูลอุปกรณ์ที่ระบุ");
+//     return;
+//   }
+
+//   // สร้างฟอร์มแก้ไขข้อมูล
+//   // สังเกตว่าเราเก็บ ItemID ไว้ใน hidden input เพื่อใช้ตอน submit
+//   const formHtml = `
+//     <input type="hidden" id="editItemId" value="${sanitize(item.ItemID)}">
+//     <div class="row">
+//       <div class="col-md-8">
+//         <div class="mb-3">
+//           <label for="editName" class="form-label">ชื่ออุปกรณ์</label>
+//           <input type="text" class="form-control" id="editName" value="${sanitize(item.Name)}" required>
+//         </div>
+//       </div>
+//       <div class="col-md-4">
+//         <div class="mb-3">
+//           <label for="editCategory" class="form-label">ประเภท</label>
+//           <input type="text" class="form-control" id="editCategory" value="${sanitize(item.Category)}">
+//         </div>
+//       </div>
+//     </div>
+//     <div class="row">
+//       <div class="col-md-6">
+//         <div class="mb-3">
+//           <label for="editSerialNumber" class="form-label">Serial Number</label>
+//           <input type="text" class="form-control" id="editSerialNumber" value="${sanitize(item.SerialNumber)}">
+//         </div>
+//       </div>
+//       <div class="col-md-6">
+//         <div class="mb-3">
+//           <label for="editStatus" class="form-label">สถานะ</label>
+//           <select class="form-select" id="editStatus">
+//             <option>ใช้งานได้</option>
+//             <option>ชำรุด</option>
+//             <option>ส่งซ่อม</option>
+//             <option>จำหน่าย</option>
+//           </select>
+//         </div>
+//       </div>
+//     </div>
+//     <div class="row">
+//          <div class="col-md-4">
+//             <div class="mb-3">
+//                 <label for="editQuantity" class="form-label">จำนวน</label>
+//                 <input type="number" class="form-control" id="editQuantity" value="${sanitize(item.Quantity)}">
+//             </div>
+//         </div>
+//         <div class="col-md-4">
+//             <div class="mb-3">
+//                 <label for="editLocation" class="form-label">สถานที่เก็บ</label>
+//                 <input type="text" class="form-control" id="editLocation" value="${sanitize(item.Location)}">
+//             </div>
+//         </div>
+//         <div class="col-md-4">
+//             <div class="mb-3">
+//                 <label for="editCustodian" class="form-label">ผู้รับผิดชอบ</label>
+//                 <input type="text" class="form-control" id="editCustodian" value="${sanitize(item.Custodian)}">
+//             </div>
+//         </div>
+//     </div>
+//     <div class="text-end">
+//         <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">ยกเลิก</button>
+//         <button type="submit" class="btn btn-primary">
+//             <i class="fas fa-save me-2"></i>บันทึกการแก้ไข
+//         </button>
+//     </div>
+//   `;
+  
+//   const form = document.getElementById('editEquipmentForm');
+//   form.innerHTML = formHtml;
+  
+//   // ตั้งค่าสถานะที่เลือกไว้ให้ตรงกับข้อมูลปัจจุบัน
+//   document.getElementById('editStatus').value = item.Status;
+
+//   const editModal = new bootstrap.Modal(document.getElementById('editEquipmentModal'));
+//   editModal.show();
+// }
+
+/**
+ * ✏️ แสดงฟอร์มแก้ไขข้อมูลใน Modal
+ */
+function editEquipment(itemId) {
+    const item = allData.find(d => d.ItemID == itemId);
+    if (!item) {
+        showError("ไม่พบข้อมูลอุปกรณ์ที่ระบุ");
+        return;
+    }
+
+    // สร้างตัวเลือกสำหรับสถานะ (Status)
+    const statusOptions = ['ใหม่', 'ใช้งานได้', 'ชำรุด', 'ส่งซ่อม', 'จำหน่าย'];
+    const statusSelectHtml = statusOptions.map(opt =>
+        `<option value="${sanitize(opt)}" ${item.Status === opt ? 'selected' : ''}>${sanitize(opt)}</option>`
+    ).join('');
+
+    // สร้างฟอร์มแก้ไขข้อมูลให้ครบถ้วนมากขึ้น
+    const formHtml = `
+    <input type="hidden" id="editItemId" value="${sanitize(item.ItemID)}">
+    <div class="row g-3">
+        <div class="col-md-8">
+            <label for="editName" class="form-label">ชื่ออุปกรณ์</label>
+            <input type="text" class="form-control" id="editName" value="${sanitize(item.Name)}" required>
+        </div>
+        <div class="col-md-4">
+            <label for="editCategory" class="form-label">ประเภท</label>
+            <input type="text" class="form-control" id="editCategory" value="${sanitize(item.Category)}">
+        </div>
+        <div class="col-md-6">
+            <label for="editSerialNumber" class="form-label">Serial Number</label>
+            <input type="text" class="form-control" id="editSerialNumber" value="${sanitize(item.SerialNumber)}">
+        </div>
+        <div class="col-md-6">
+            <label for="editStatus" class="form-label">สถานะ</label>
+            <select class="form-select" id="editStatus">${statusSelectHtml}</select>
+        </div>
+        <div class="col-md-3">
+            <label for="editQuantity" class="form-label">จำนวน</label>
+            <input type="number" class="form-control" id="editQuantity" value="${sanitize(item.Quantity)}">
+        </div>
+        <div class="col-md-9">
+            <label for="editLocation" class="form-label">สถานที่เก็บ</label>
+            <input type="text" class="form-control" id="editLocation" value="${sanitize(item.Location)}">
+        </div>
+        <div class="col-12">
+            <label for="editCustodian" class="form-label">ผู้รับผิดชอบ</label>
+            <input type="text" class="form-control" id="editCustodian" value="${sanitize(item.Custodian)}">
+        </div>
+        <div class="col-12">
+            <label for="editNotes" class="form-label">รายละเอียดเพิ่มเติม/ตำแหน่ง</label>
+            <textarea class="form-control" id="editNotes" rows="2">${sanitize(item.Notes)}</textarea>
+        </div>
+    </div>
+    `;
+
+    const form = document.getElementById('editEquipmentForm');
+    // แทรกฟอร์ม HTML เข้าไปก่อนปุ่ม
+    form.innerHTML = formHtml + form.lastElementChild.outerHTML;
+
+    const editModal = new bootstrap.Modal(document.getElementById('editEquipmentModal'));
+    editModal.show();
+}
+
+/**
+ * 🗑️ ลบข้อมูลอุปกรณ์
+ */
+function deleteEquipment(itemId) {
+  Swal.fire({
+    title: 'ยืนยันการลบ?',
+    text: `คุณต้องการลบอุปกรณ์รหัส ${sanitize(itemId)} ใช่หรือไม่?`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'ใช่, ลบเลย!',
+    cancelButtonText: 'ยกเลิก'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // แสดงสถานะกำลังลบ...
+      Swal.fire({
+        title: 'กำลังลบข้อมูล...',
+        text: 'กรุณารอสักครู่',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+      
+      google.script.run
+        .withSuccessHandler(response => {
+          Swal.fire(
+            'ลบสำเร็จ!',
+            'อุปกรณ์ของคุณถูกลบเรียบร้อยแล้ว',
+            'success'
+          );
+          loadData(); // โหลดข้อมูลใหม่เพื่ออัปเดตตาราง
+        })
+        .withFailureHandler(showError)
+        .deleteItemById(itemId);
+    }
+  });
+}
+
+// // === จัดการการ Submit ฟอร์มแก้ไข ===
+// // เพิ่ม Event Listener นี้ไว้กับโค้ดส่วนกลาง (นอกฟังก์ชัน)
+// document.getElementById('editEquipmentForm').addEventListener('submit', function(e) {
+//   e.preventDefault(); // ป้องกันการรีโหลดหน้าเว็บ
+
+//   // สร้าง Object ข้อมูลที่จะส่งไปอัปเดต
+//   const updatedData = {
+//     ItemID: document.getElementById('editItemId').value,
+//     Name: document.getElementById('editName').value,
+//     Category: document.getElementById('editCategory').value,
+//     SerialNumber: document.getElementById('editSerialNumber').value,
+//     Status: document.getElementById('editStatus').value,
+//     Quantity: document.getElementById('editQuantity').value,
+//     Location: document.getElementById('editLocation').value,
+//     Custodian: document.getElementById('editCustodian').value,
+//   };
+
+//   // แสดงสถานะกำลังบันทึก...
+//   Swal.fire({
+//     title: 'กำลังบันทึก...',
+//     allowOutsideClick: false,
+//     didOpen: () => { Swal.showLoading(); }
+//   });
+
+//   google.script.run
+//     .withSuccessHandler(response => {
+//       // ซ่อน Modal
+//       const editModal = bootstrap.Modal.getInstance(document.getElementById('editEquipmentModal'));
+//       editModal.hide();
+
+//       Swal.fire('สำเร็จ!', 'บันทึกข้อมูลเรียบร้อยแล้ว', 'success');
+      
+//       loadData(); // โหลดข้อมูลใหม่เพื่ออัปเดตการแสดงผล
+//     })
+//     .withFailureHandler(showError)
+//     .updateEquipmentData(updatedData);
+// });
+
+// === จัดการการ Submit ฟอร์มแก้ไข ===
+document.getElementById('editEquipmentForm').addEventListener('submit', function(e) {
+    e.preventDefault(); // ป้องกันการรีโหลดหน้าเว็บ
+
+    // ดึงชื่อผู้ใช้งานจาก sessionStorage
+    const statusUser = sessionStorage.getItem("statusUser")?.split(",") || [];
+    const fullname = statusUser[3] || "N/A"; // ใส่ N/A หากไม่มีข้อมูล
+
+    // สร้าง Object ข้อมูลที่จะส่งไปอัปเดตให้ครบถ้วน
+    const updatedData = {
+        ItemID: document.getElementById('editItemId').value,
+        Name: document.getElementById('editName').value,
+        Category: document.getElementById('editCategory').value,
+        SerialNumber: document.getElementById('editSerialNumber').value,
+        Status: document.getElementById('editStatus').value,
+        Quantity: document.getElementById('editQuantity').value,
+        Location: document.getElementById('editLocation').value,
+        Custodian: document.getElementById('editCustodian').value,
+        Notes: document.getElementById('editNotes').value,
+        UpdatedBy: fullname // เพิ่มข้อมูลผู้แก้ไข
+    };
+
+    // แสดงสถานะกำลังบันทึก...
+    Swal.fire({
+        title: 'กำลังบันทึก...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    google.script.run
+        .withSuccessHandler(response => {
+            // ซ่อน Modal
+            const editModal = bootstrap.Modal.getInstance(document.getElementById('editEquipmentModal'));
+            editModal.hide();
+
+            Swal.fire('สำเร็จ!', 'บันทึกข้อมูลเรียบร้อยแล้ว', 'success');
+
+            loadData(); // โหลดข้อมูลใหม่เพื่ออัปเดตการแสดงผล
+        })
+        .withFailureHandler(showError)
+        .updateEquipmentData(updatedData);
+});
+  </script>
+                    
