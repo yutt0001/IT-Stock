@@ -134,10 +134,34 @@
                                     <div class="col-md-6"><label class="form-label">ตำแหน่งเก็บ</label><input type="text" class="form-control" id="equipmentLocation" placeholder="ตู้ / ตำแหน่ง"></div>
                                     <div class="col-md-12"><label class="form-label">หมายเหตุ</label><textarea class="form-control" id="notes" rows="2"></textarea></div>
                                     <!-- <div class="col-md-12"><label class="form-label">รูปภาพอุปกรณ์</label><input type="file" class="form-control" id="equipmentImage" accept="image/*"></div> -->
+
                                     <div class="col-md-12">
                                         <label class="form-label">รูปภาพอุปกรณ์</label>
-                                        <input type="file" class="form-control" id="equipmentImage" accept="image/*" capture="environment">
+                                        
+                                        <ul class="nav nav-pills mb-2" id="imageInputTabs" role="tablist">
+                                            <li class="nav-item"><button class="nav-link active btn-sm" data-bs-toggle="pill" data-bs-target="#uploadTab" type="button">📂 อัปโหลดไฟล์</button></li>
+                                            <li class="nav-item"><button class="nav-link btn-sm" data-bs-toggle="pill" data-bs-target="#cameraTab" type="button" onclick="startCamera()">📸 ถ่ายภาพ</button></li>
+                                        </ul>
+                                    
+                                        <div class="tab-content border rounded p-3 bg-light">
+                                            <div class="tab-pane fade show active" id="uploadTab">
+                                                <input type="file" class="form-control" id="equipmentImage" accept="image/*">
+                                            </div>
+                                            
+                                            <div class="tab-pane fade text-center" id="cameraTab">
+                                                <video id="cameraVideo" width="100%" style="max-width:350px; display:none; border-radius:8px;" autoplay playsinline></video>
+                                                <canvas id="cameraCanvas" style="display:none; max-width:350px; width:100%; border-radius:8px; margin:0 auto;"></canvas>
+                                                
+                                                <div class="mt-3">
+                                                    <button type="button" id="btnCapture" class="btn btn-primary" style="display:none;" onclick="takeSnapshot()"><i class="fas fa-camera me-2"></i>ถ่ายภาพ</button>
+                                                    <button type="button" id="btnRetake" class="btn btn-warning" style="display:none;" onclick="retakePhoto()"><i class="fas fa-undo me-2"></i>ถ่ายใหม่</button>
+                                                </div>
+                                                <input type="hidden" id="cameraImageData"> 
+                                            </div>
+                                        </div>
                                     </div>
+
+                                    
                                 </div>
                                 <div class="text-end mt-4">
                                     <button type="button" class="btn btn-secondary me-2" onclick="showPage('equipmentListSection')">ยกเลิก</button>
