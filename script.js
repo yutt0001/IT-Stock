@@ -362,33 +362,114 @@ async function loadData() {
     }
 }
 
+// function displayData(data) {
+//     allData = Array.isArray(data) ? data : [];
+//     const tbody = document.getElementById("tableBody");
+//     if (!allData.length) { tbody.innerHTML = `<tr><td colspan="10">ไม่พบข้อมูล</td></tr>`; return; }
+    
+//     // Set filter options
+//     const setOpt = (id, vals) => { const el=document.getElementById(id), cur=el.value; el.innerHTML='<option>ทั้งหมด</option>'+vals.map(v=>`<option>${v}</option>`).join(''); el.value=cur; };
+//     setOpt("category", [...new Set(allData.map(d=>d.Category).filter(Boolean))]);
+//     setOpt("status", [...new Set(allData.map(d=>d.Status).filter(Boolean))]);
+//     setOpt("location", [...new Set(allData.map(d=>d.Location).filter(Boolean))]);
+
+//     let html = "";
+//     allData.forEach(item => {
+//         const img = item.ImageURL || "https://via.placeholder.com/60";
+//         html += `<tr>
+//             <td><img src="${img}" style="max-width:50px"></td>
+//             <td class="text-start">${item.Name||''}</td><td>${item.Category||''}</td><td>${item.SerialNumber||''}</td>
+//             <td>${item.Status||''}</td><td>${item.Quantity||'0'}</td><td>${item.Location||''}</td>
+//             <td>${item.Custodian||''}</td><td>${item.WarrantyExpireDate||'-'}</td>
+//             <td>
+//                 <button class="btn btn-sm btn-outline-primary" onclick="viewEquipmentDetail('${item.ItemID}')"><i class="fas fa-eye"></i></button>
+//                 <button class="btn btn-sm btn-outline-warning" onclick="editEquipment('${item.ItemID}')"><i class="fas fa-edit"></i></button>
+//                 <button class="btn btn-sm btn-outline-danger" onclick="deleteEquipment('${item.ItemID}')"><i class="fas fa-trash"></i></button>
+//             </td>
+//         </tr>`;
+//     });
+//     tbody.innerHTML = html;
+// }
+
 function displayData(data) {
     allData = Array.isArray(data) ? data : [];
-    const tbody = document.getElementById("tableBody");
-    if (!allData.length) { tbody.innerHTML = `<tr><td colspan="10">ไม่พบข้อมูล</td></tr>`; return; }
     
-    // Set filter options
-    const setOpt = (id, vals) => { const el=document.getElementById(id), cur=el.value; el.innerHTML='<option>ทั้งหมด</option>'+vals.map(v=>`<option>${v}</option>`).join(''); el.value=cur; };
+    const tbody = document.getElementById("tableBody"); // ตาราง (PC)
+    const cardView = document.getElementById("cardView"); // การ์ด (มือถือ)
+    
+    // ถ้าไม่มีข้อมูล ให้ขึ้นข้อความแจ้งเตือนทั้ง 2 หน้าจอ
+    if (!allData.length) { 
+        tbody.innerHTML = `<tr><td colspan="10">ไม่พบข้อมูล</td></tr>`; 
+        cardView.innerHTML = `<div class="alert alert-secondary text-center">ไม่พบข้อมูล</div>`;
+        return; 
+    }
+    
+    // อัปเดตตัวกรอง Dropdown
+    const setOpt = (id, vals) => { 
+        const el = document.getElementById(id);
+        const cur = el.value; 
+        el.innerHTML = '<option value="ทั้งหมด">ทั้งหมด</option>' + vals.map(v => `<option value="${v}">${v}</option>`).join(''); 
+        el.value = cur; 
+    };
     setOpt("category", [...new Set(allData.map(d=>d.Category).filter(Boolean))]);
     setOpt("status", [...new Set(allData.map(d=>d.Status).filter(Boolean))]);
     setOpt("location", [...new Set(allData.map(d=>d.Location).filter(Boolean))]);
 
-    let html = "";
+    let tableHtml = ""; // สำหรับเก็บ HTML ตาราง (PC)
+    let cardHtml = "";  // สำหรับเก็บ HTML การ์ด (Mobile)
+
     allData.forEach(item => {
         const img = item.ImageURL || "https://via.placeholder.com/60";
-        html += `<tr>
-            <td><img src="${img}" style="max-width:50px"></td>
-            <td class="text-start">${item.Name||''}</td><td>${item.Category||''}</td><td>${item.SerialNumber||''}</td>
-            <td>${item.Status||''}</td><td>${item.Quantity||'0'}</td><td>${item.Location||''}</td>
-            <td>${item.Custodian||''}</td><td>${item.WarrantyExpireDate||'-'}</td>
+        const itemName = item.Name || 'ไม่ระบุชื่อ';
+        
+        // 1. สร้าง HTML สำหรับตาราง (PC) ---------------------------
+        tableHtml += `<tr>
+            <td><img src="${img}" style="max-width:50px; border-radius:4px;"></td>
+            <td class="text-start fw-bold text-primary">${itemName}</td>
+            <td>${item.Category||''}</td>
+            <td>${item.SerialNumber||''}</td>
+            <td><span class="badge bg-secondary">${item.Status||''}</span></td>
+            <td>${item.Quantity||'0'}</td>
+            <td>${item.Location||''}</td>
+            <td>${item.Custodian||''}</td>
+            <td>${item.WarrantyExpireDate||'-'}</td>
             <td>
                 <button class="btn btn-sm btn-outline-primary" onclick="viewEquipmentDetail('${item.ItemID}')"><i class="fas fa-eye"></i></button>
                 <button class="btn btn-sm btn-outline-warning" onclick="editEquipment('${item.ItemID}')"><i class="fas fa-edit"></i></button>
                 <button class="btn btn-sm btn-outline-danger" onclick="deleteEquipment('${item.ItemID}')"><i class="fas fa-trash"></i></button>
             </td>
         </tr>`;
+
+        // 2. สร้าง HTML สำหรับการ์ด (มือถือ) --------------------------
+        cardHtml += `
+        <div class="card mb-3 shadow-sm border-0">
+            <div class="row g-0">
+                <div class="col-4 d-flex align-items-center justify-content-center bg-light p-2" style="border-radius: 8px 0 0 8px;">
+                    <img src="${img}" class="img-fluid rounded" style="max-height: 90px; object-fit: contain;">
+                </div>
+                <div class="col-8">
+                    <div class="card-body p-2 pl-3">
+                        <h6 class="card-title mb-1 fw-bold text-primary text-truncate">${itemName}</h6>
+                        <p class="card-text mb-2" style="font-size: 0.85rem; line-height: 1.4;">
+                            <strong>S/N:</strong> ${item.SerialNumber||'-'}<br>
+                            <strong>ประเภท:</strong> ${item.Category||'-'}<br>
+                            <strong>สถานะ:</strong> <span class="badge bg-secondary">${item.Status||''}</span><br>
+                            <strong>คงเหลือ:</strong> <span class="text-success fw-bold">${item.Quantity||'0'}</span> ${item.Unit||''}
+                        </p>
+                        <div class="d-flex justify-content-end gap-1 mt-1">
+                            <button class="btn btn-sm btn-primary" onclick="viewEquipmentDetail('${item.ItemID}')"><i class="fas fa-eye"></i></button>
+                            <button class="btn btn-sm btn-warning text-dark" onclick="editEquipment('${item.ItemID}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteEquipment('${item.ItemID}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>`;
     });
-    tbody.innerHTML = html;
+
+    // นำข้อมูลที่สร้างเสร็จแล้วไปแสดงผลตามหน้าจอที่ถูกต้อง
+    tbody.innerHTML = tableHtml;
+    cardView.innerHTML = cardHtml;
 }
 
 function resetFilters() {
