@@ -836,3 +836,15 @@ function clearImagePreview() {
     document.getElementById('imagePreviewContainer').style.display = 'none'; // ซ่อนกรอบรูป
     document.getElementById('imagePreview').src = '';
 }
+
+
+// ฟังก์ชันสำหรับลบรูปทิ้ง (กรณีถ่ายเสีย หรือกดยกเลิก)
+function clearImagePreview() {
+    const eqImageInput = document.getElementById('equipmentImage');
+    const previewContainer = document.getElementById('imagePreviewContainer');
+    const previewImage = document.getElementById('imagePreview');
+    
+    if (eqImageInput) eqImageInput.value = ''; // ล้างค่าไฟล์
+    if (previewContainer) previewContainer.style.display = 'none'; // ซ่อนกรอบรูป
+    if (previewImage) previewImage.src = '';
+}
