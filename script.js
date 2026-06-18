@@ -1013,3 +1013,31 @@ function clearImagePreview() {
     if (previewContainer) previewContainer.style.display = 'none'; // ซ่อนกรอบ
     if (previewImage) previewImage.src = '';
 }
+
+
+// ==========================================
+// ฟังก์ชันเด้งเมนูให้เลือก (กล้อง / คลังภาพ)
+// ==========================================
+function chooseImageSource() {
+    Swal.fire({
+        title: 'เลือกวิธีเพิ่มรูปภาพ',
+        showDenyButton: true,
+        showCancelButton: true,
+        confirmButtonText: '<i class="fas fa-camera me-1"></i> ถ่ายรูปใหม่',
+        denyButtonText: '<i class="fas fa-images me-1"></i> เลือกจากคลัง',
+        cancelButtonText: 'ยกเลิก',
+        confirmButtonColor: '#3085d6',
+        denyButtonColor: '#28a745'
+    }).then((result) => {
+        const fileInput = document.getElementById('equipmentImage');
+        if (result.isConfirmed) {
+            // กรณีเลือก "ถ่ายรูปใหม่" -> แอบเติมคำสั่ง capture เพื่อบังคับเปิดกล้อง
+            fileInput.setAttribute('capture', 'environment');
+            fileInput.click();
+        } else if (result.isDenied) {
+            // กรณีเลือก "เลือกจากคลัง" -> ลบคำสั่ง capture ออก เพื่อให้เปิดอัลบั้ม
+            fileInput.removeAttribute('capture');
+            fileInput.click();
+        }
+    });
+}
