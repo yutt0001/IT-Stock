@@ -677,25 +677,31 @@ async function handleAddEquipment(e) {
     Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     
     try {
-        // ดึงข้อมูลจากฟอร์มตามปกติ
+        // ⭐️ ฟังก์ชันตัวช่วย: ถ้าหา ID ไม่เจอ ให้คืนค่าเป็นช่องว่างแทนการแจก Error
+        const getVal = (id) => {
+            const el = document.getElementById(id);
+            return el ? el.value : "";
+        };
+
+        // ดึงข้อมูลโดยใช้ getVal() ทั้งหมด ป้องกัน error: properties of null (reading 'value')
         const eq = {
-            name: document.getElementById("equipmentName").value, 
-            type: document.getElementById("equipmentType").value,
-            serial: document.getElementById("serialNumber").value, 
-            status: document.getElementById("equipmentStatus").value,
-            unitPrice: document.getElementById("unitPrice").value, 
-            quantity: document.getElementById("quantity").value,
-            unit: document.getElementById("Unit").value, 
-            totalValue: document.getElementById("totalValue").value,
-            vendor: document.getElementById("vendor").value, 
-            responsible: document.getElementById("responsible").value,
-            purchaseDate: document.getElementById("purchaseDate").value, 
-            warrantyExpire: document.getElementById("warrantyExpire").value,
-            auditDate: document.getElementById("auditDate").value, 
-            location: document.getElementById("Location").value,
-            locationDetail: document.getElementById("equipmentLocation").value, 
-            notes: document.getElementById("notes").value,
-            createdBy: document.getElementById("currentUser").innerText, 
+            name: getVal("equipmentName"), 
+            type: getVal("equipmentType"),
+            serial: getVal("serialNumber"), 
+            status: getVal("equipmentStatus"),
+            unitPrice: getVal("unitPrice"), 
+            quantity: getVal("quantity"),
+            unit: getVal("Unit"), 
+            totalValue: getVal("totalValue"),
+            vendor: getVal("vendor"), 
+            responsible: getVal("responsible"),
+            purchaseDate: getVal("purchaseDate"), 
+            warrantyExpire: getVal("warrantyExpire"),
+            auditDate: getVal("auditDate"), 
+            location: getVal("Location"),
+            locationDetail: getVal("equipmentLocation"), 
+            notes: getVal("notes"),
+            createdBy: document.getElementById("currentUser") ? document.getElementById("currentUser").innerText : "ไม่ระบุ", 
             imageUrl: ""
         };
 
@@ -704,26 +710,25 @@ async function handleAddEquipment(e) {
         const file = fileInput ? fileInput.files[0] : null;
 
         if (file) {
-            // ถ้ามีการแนบไฟล์ หรือถ่ายรูปจากกล้อง
+            // กรณีมีรูปภาพ
             const reader = new FileReader();
             reader.onload = async (event) => {
-                // อัปโหลดรูปไป Google Drive ก่อน
                 const imgRes = await callBackend('uploadImageAndSave', { 
                     base64Data: event.target.result, 
                     filename: file.name || ("camera_" + new Date().getTime() + ".jpg") 
                 });
                 if(imgRes.success) eq.imageUrl = imgRes.url;
                 
-                // นำข้อมูลลง Google Sheet
                 await finalizeAdd(eq);
             };
             reader.readAsDataURL(file);
         } else {
-            // ถ้าไม่ได้ใส่รูปภาพ ก็บันทึกลง Sheet ได้เลย
+            // กรณีไม่มีรูปภาพ
             await finalizeAdd(eq);
         }
     } catch(err) { 
         Swal.fire('ผิดพลาด', err.message, 'error'); 
+        console.error("Add Equipment Error:", err);
     }
 }
         
