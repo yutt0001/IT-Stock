@@ -625,66 +625,106 @@ function calcTotal() {
     document.getElementById("totalValue").value = (price * qty).toFixed(2);
 }
 
-async function handleAddEquipment(e) {
-    e.preventDefault();
-    Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-    try {
-        const eq = {
-            name: document.getElementById("equipmentName").value, type: document.getElementById("equipmentType").value,
-            serial: document.getElementById("serialNumber").value, status: document.getElementById("equipmentStatus").value,
-            unitPrice: document.getElementById("unitPrice").value, quantity: document.getElementById("quantity").value,
-            unit: document.getElementById("Unit").value, totalValue: document.getElementById("totalValue").value,
-            vendor: document.getElementById("vendor").value, responsible: document.getElementById("responsible").value,
-            purchaseDate: document.getElementById("purchaseDate").value, warrantyExpire: document.getElementById("warrantyExpire").value,
-            auditDate: document.getElementById("auditDate").value, location: document.getElementById("Location").value,
-            locationDetail: document.getElementById("equipmentLocation").value, notes: document.getElementById("notes").value,
-            createdBy: document.getElementById("currentUser").innerText, imageUrl: ""
-        };
+// async function handleAddEquipment(e) {
+//     e.preventDefault();
+//     Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+//     try {
+//         const eq = {
+//             name: document.getElementById("equipmentName").value, type: document.getElementById("equipmentType").value,
+//             serial: document.getElementById("serialNumber").value, status: document.getElementById("equipmentStatus").value,
+//             unitPrice: document.getElementById("unitPrice").value, quantity: document.getElementById("quantity").value,
+//             unit: document.getElementById("Unit").value, totalValue: document.getElementById("totalValue").value,
+//             vendor: document.getElementById("vendor").value, responsible: document.getElementById("responsible").value,
+//             purchaseDate: document.getElementById("purchaseDate").value, warrantyExpire: document.getElementById("warrantyExpire").value,
+//             auditDate: document.getElementById("auditDate").value, location: document.getElementById("Location").value,
+//             locationDetail: document.getElementById("equipmentLocation").value, notes: document.getElementById("notes").value,
+//             createdBy: document.getElementById("currentUser").innerText, imageUrl: ""
+//         };
 
+// // ... โค้ดดึงข้อมูล eq ด้านบนยังเหมือนเดิม ...
+
+//         // เช็กข้อมูลภาพจาก 2 แหล่ง (ไฟล์อัปโหลด หรือ กล้อง)
 //         const file = document.getElementById("equipmentImage").files[0];
-//         if (file) {
+//         const cameraImageBase64 = document.getElementById("cameraImageData").value;
+
+//         if (cameraImageBase64) {
+//             // กรณี: ถ่ายรูปจากกล้อง (มีข้อมูล base64 อยู่แล้ว ส่งเข้า API ได้เลย)
+//             const filename = "camera_" + new Date().getTime() + ".jpg";
+//             const imgRes = await callBackend('uploadImageAndSave', { base64Data: cameraImageBase64, filename: filename });
+//             if (imgRes.success) eq.imageUrl = imgRes.url;
+//             await finalizeAdd(eq);
+            
+//         } else if (file) {
+//             // กรณี: อัปโหลดไฟล์ภาพ
 //             const reader = new FileReader();
 //             reader.onload = async (e) => {
 //                 const imgRes = await callBackend('uploadImageAndSave', { base64Data: e.target.result, filename: file.name });
-//                 if(imgRes.success) eq.imageUrl = imgRes.url;
+//                 if (imgRes.success) eq.imageUrl = imgRes.url;
 //                 await finalizeAdd(eq);
 //             };
 //             reader.readAsDataURL(file);
+            
 //         } else {
+//             // กรณี: ไม่ได้ใส่รูปภาพ
 //             await finalizeAdd(eq);
 //         }
+
 //     } catch(e) { Swal.fire('ผิดพลาด', e.message, 'error'); }
 // }
 
-// ... โค้ดดึงข้อมูล eq ด้านบนยังเหมือนเดิม ...
+async function handleAddEquipment(e) {
+    e.preventDefault();
+    Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    
+    try {
+        // ดึงข้อมูลจากฟอร์มตามปกติ
+        const eq = {
+            name: document.getElementById("equipmentName").value, 
+            type: document.getElementById("equipmentType").value,
+            serial: document.getElementById("serialNumber").value, 
+            status: document.getElementById("equipmentStatus").value,
+            unitPrice: document.getElementById("unitPrice").value, 
+            quantity: document.getElementById("quantity").value,
+            unit: document.getElementById("Unit").value, 
+            totalValue: document.getElementById("totalValue").value,
+            vendor: document.getElementById("vendor").value, 
+            responsible: document.getElementById("responsible").value,
+            purchaseDate: document.getElementById("purchaseDate").value, 
+            warrantyExpire: document.getElementById("warrantyExpire").value,
+            auditDate: document.getElementById("auditDate").value, 
+            location: document.getElementById("Location").value,
+            locationDetail: document.getElementById("equipmentLocation").value, 
+            notes: document.getElementById("notes").value,
+            createdBy: document.getElementById("currentUser").innerText, 
+            imageUrl: ""
+        };
 
-        // เช็กข้อมูลภาพจาก 2 แหล่ง (ไฟล์อัปโหลด หรือ กล้อง)
-        const file = document.getElementById("equipmentImage").files[0];
-        const cameraImageBase64 = document.getElementById("cameraImageData").value;
+        // ดึงไฟล์รูปภาพจากช่อง input 
+        const fileInput = document.getElementById("equipmentImage");
+        const file = fileInput ? fileInput.files[0] : null;
 
-        if (cameraImageBase64) {
-            // กรณี: ถ่ายรูปจากกล้อง (มีข้อมูล base64 อยู่แล้ว ส่งเข้า API ได้เลย)
-            const filename = "camera_" + new Date().getTime() + ".jpg";
-            const imgRes = await callBackend('uploadImageAndSave', { base64Data: cameraImageBase64, filename: filename });
-            if (imgRes.success) eq.imageUrl = imgRes.url;
-            await finalizeAdd(eq);
-            
-        } else if (file) {
-            // กรณี: อัปโหลดไฟล์ภาพ
+        if (file) {
+            // ถ้ามีการแนบไฟล์ หรือถ่ายรูปจากกล้อง
             const reader = new FileReader();
-            reader.onload = async (e) => {
-                const imgRes = await callBackend('uploadImageAndSave', { base64Data: e.target.result, filename: file.name });
-                if (imgRes.success) eq.imageUrl = imgRes.url;
+            reader.onload = async (event) => {
+                // อัปโหลดรูปไป Google Drive ก่อน
+                const imgRes = await callBackend('uploadImageAndSave', { 
+                    base64Data: event.target.result, 
+                    filename: file.name || ("camera_" + new Date().getTime() + ".jpg") 
+                });
+                if(imgRes.success) eq.imageUrl = imgRes.url;
+                
+                // นำข้อมูลลง Google Sheet
                 await finalizeAdd(eq);
             };
             reader.readAsDataURL(file);
-            
         } else {
-            // กรณี: ไม่ได้ใส่รูปภาพ
+            // ถ้าไม่ได้ใส่รูปภาพ ก็บันทึกลง Sheet ได้เลย
             await finalizeAdd(eq);
         }
-
-    } catch(e) { Swal.fire('ผิดพลาด', e.message, 'error'); }
+    } catch(err) { 
+        Swal.fire('ผิดพลาด', err.message, 'error'); 
+    }
 }
         
 
