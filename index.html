@@ -182,7 +182,7 @@
                                         </div>
                                     </div> -->
 
-                                    <div class="col-md-12 mt-3">
+                                    <!-- <div class="col-md-12 mt-3">
                                         <label class="form-label fw-bold">รูปภาพอุปกรณ์</label>
                                         
                                         <input type="file" id="equipmentImage" accept="image/*" capture="environment" style="position: absolute; left: -9999px;">
@@ -200,7 +200,30 @@
                                                 </button>
                                             </div>
                                         </div>
+                                    </div> -->
+
+                                    <div class="col-md-12 mt-3">
+                                        <label class="form-label fw-bold">รูปภาพอุปกรณ์</label>
+                                        
+                                        <input type="file" id="equipmentImage" accept="image/*" style="position: absolute; left: -9999px;">
+                                        
+                                        <button type="button" class="btn btn-outline-primary w-100 py-4" style="border-style: dashed; border-width: 2px;" onclick="document.getElementById('equipmentImage').click();">
+                                            <i class="fas fa-camera fa-3x mb-2 d-block text-primary"></i>
+                                            <span class="fs-5">คลิกเพื่อถ่ายรูป / เลือกรูปภาพ</span>
+                                        </button>
+                                        
+                                        <div id="imagePreviewContainer" class="mt-3 text-center" style="display: none;">
+                                            <img id="imagePreview" src="" alt="Preview" class="img-fluid rounded shadow" style="max-height: 250px; border: 3px solid #ccc;">
+                                            <div class="mt-2">
+                                                <button type="button" class="btn btn-sm btn-danger" onclick="clearImagePreview()">
+                                                    <i class="fas fa-trash me-1"></i> ถ่ายใหม่ / ลบรูป
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
+
+
+                                    
 
                                     
                                 </div>
