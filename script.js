@@ -85,11 +85,35 @@ function optimizeForLine() {
     }
 }
 
-function initializeApp() {
-    // 1. เรียกใช้ฟังก์ชันตรวจจับ LINE ทันทีที่เริ่มโหลดระบบ
-    optimizeForLine();
+// function initializeApp() {
+//     // 1. เรียกใช้ฟังก์ชันตรวจจับ LINE ทันทีที่เริ่มโหลดระบบ
+//     optimizeForLine();
 
-   // 2. ระบบเมนูด้านข้าง (Sidebar) 
+//    // 2. ระบบเมนูด้านข้าง (Sidebar) 
+//     const sidebarToggle = document.getElementById('sidebarToggle');
+//     const sidebar = document.getElementById('sidebar');
+//     if (sidebarToggle) {
+//         sidebarToggle.addEventListener('click', () => sidebar.classList.toggle('show'));
+//     }
+//     document.addEventListener('click', (e) => {
+//         if (window.innerWidth <= 768 && !sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+//             sidebar.classList.remove('show');
+//         }
+//     });
+
+//     // Event Listeners สำหรับฟอร์มต่างๆ
+//     document.getElementById("unitPrice").addEventListener("input", calcTotal);
+//     document.getElementById("quantity").addEventListener("input", calcTotal);
+//     document.getElementById("keyword").addEventListener("keydown", e => { if(e.key === "Enter") loadData(); });
+    
+//     document.getElementById("addEquipmentForm").addEventListener("submit", handleAddEquipment);
+//     document.getElementById('editEquipmentForm').addEventListener('submit', handleEditEquipment);
+//     document.getElementById('customReportForm').addEventListener('submit', handleCustomReport);
+// }
+
+function initializeApp() {
+    optimizeForLine(); // ฟังก์ชันซ่อนกล้องสดของ LINE
+
     const sidebarToggle = document.getElementById('sidebarToggle');
     const sidebar = document.getElementById('sidebar');
     if (sidebarToggle) {
@@ -109,6 +133,29 @@ function initializeApp() {
     document.getElementById("addEquipmentForm").addEventListener("submit", handleAddEquipment);
     document.getElementById('editEquipmentForm').addEventListener('submit', handleEditEquipment);
     document.getElementById('customReportForm').addEventListener('submit', handleCustomReport);
+
+    // ==========================================
+    // ⭐️ เพิ่มโค้ดพรีวิวรูปภาพตรงนี้ครับ ⭐️
+    // ==========================================
+    const eqImageInput = document.getElementById('equipmentImage');
+    if (eqImageInput) {
+        eqImageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const previewContainer = document.getElementById('imagePreviewContainer');
+            const previewImage = document.getElementById('imagePreview');
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    previewImage.src = event.target.result;
+                    previewContainer.style.display = 'block'; // โชว์กรอบรูป
+                };
+                reader.readAsDataURL(file);
+            } else {
+                clearImagePreview();
+            }
+        });
+    }
 }
 
 function showPage(pageId) {
