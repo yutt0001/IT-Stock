@@ -560,10 +560,20 @@ async function handleAddEquipment(e) {
 }
         
 
+// async function finalizeAdd(eq) {
+//     await callBackend('addEquipment', { equipment: eq });
+//     Swal.fire('สำเร็จ', 'บันทึกอุปกรณ์ใหม่แล้ว', 'success').then(() => { document.getElementById("addEquipmentForm").reset(); showPage('equipmentListSection'); });
+// }
+
 async function finalizeAdd(eq) {
     await callBackend('addEquipment', { equipment: eq });
-    Swal.fire('สำเร็จ', 'บันทึกอุปกรณ์ใหม่แล้ว', 'success').then(() => { document.getElementById("addEquipmentForm").reset(); showPage('equipmentListSection'); });
+    Swal.fire('สำเร็จ', 'บันทึกอุปกรณ์ใหม่แล้ว', 'success').then(() => { 
+        document.getElementById("addEquipmentForm").reset(); 
+        clearImagePreview(); // <--- เพิ่มบรรทัดนี้เพื่อลบรูปพรีวิวออก
+        showPage('equipmentListSection'); 
+    });
 }
+
 
 // ==========================================
 // 7. ระบบเบิก-คืน (Borrow / Return)
@@ -749,3 +759,33 @@ document.addEventListener('click', (e) => {
         stopCamera();
     }
 });
+
+// ==========================================
+// ระบบพรีวิวรูปภาพจากกล้อง
+// ==========================================
+
+// ตรวจจับเมื่อมีการถ่ายรูป หรือเลือกไฟล์รูปภาพ
+document.getElementById('equipmentImage').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const previewContainer = document.getElementById('imagePreviewContainer');
+    const previewImage = document.getElementById('imagePreview');
+
+    if (file) {
+        // ใช้ FileReader อ่านไฟล์ภาพมาแสดงบนหน้าเว็บ
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            previewImage.src = event.target.result;
+            previewContainer.style.display = 'block'; // โชว์กรอบรูป
+        }
+        reader.readAsDataURL(file);
+    } else {
+        clearImagePreview();
+    }
+});
+
+// ฟังก์ชันสำหรับลบรูปทิ้ง (กรณีถ่ายเสีย)
+function clearImagePreview() {
+    document.getElementById('equipmentImage').value = ''; // ล้างค่าไฟล์
+    document.getElementById('imagePreviewContainer').style.display = 'none'; // ซ่อนกรอบรูป
+    document.getElementById('imagePreview').src = '';
+}
