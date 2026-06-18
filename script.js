@@ -1015,10 +1015,59 @@ function clearImagePreview() {
 }
 
 
+// // ==========================================
+// // ฟังก์ชันเด้งเมนูให้เลือก (กล้อง / คลังภาพ)
+// // ==========================================
+// function chooseImageSource() {
+//     Swal.fire({
+//         title: 'เลือกวิธีเพิ่มรูปภาพ',
+//         showDenyButton: true,
+//         showCancelButton: true,
+//         confirmButtonText: '<i class="fas fa-camera me-1"></i> ถ่ายรูปใหม่',
+//         denyButtonText: '<i class="fas fa-images me-1"></i> เลือกจากคลัง',
+//         cancelButtonText: 'ยกเลิก',
+//         confirmButtonColor: '#3085d6',
+//         denyButtonColor: '#28a745'
+//     }).then((result) => {
+//         const fileInput = document.getElementById('equipmentImage');
+//         if (result.isConfirmed) {
+//             // กรณีเลือก "ถ่ายรูปใหม่" -> แอบเติมคำสั่ง capture เพื่อบังคับเปิดกล้อง
+//             fileInput.setAttribute('capture', 'environment');
+//             fileInput.click();
+//         } else if (result.isDenied) {
+//             // กรณีเลือก "เลือกจากคลัง" -> ลบคำสั่ง capture ออก เพื่อให้เปิดอัลบั้ม
+//             fileInput.removeAttribute('capture');
+//             fileInput.click();
+//         }
+//     });
+// }
+
 // ==========================================
-// ฟังก์ชันเด้งเมนูให้เลือก (กล้อง / คลังภาพ)
+// ระบบตรวจสอบฮาร์ดแวร์ และ เด้งเมนูให้เลือกรูปภาพ
 // ==========================================
+let isCameraAvailable = false; // ตัวแปรเก็บสถานะว่าเครื่องนี้มีกล้องหรือไม่
+
+// ให้ระบบเช็กฮาร์ดแวร์ล่วงหน้าทันทีที่เปิดเว็บ
+if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+    navigator.mediaDevices.enumerateDevices().then(devices => {
+        // ค้นหาว่ามีอุปกรณ์ประเภท 'videoinput' (กล้อง) ติดตั้งอยู่หรือไม่
+        isCameraAvailable = devices.some(device => device.kind === 'videoinput');
+    }).catch(err => {
+        console.warn("ไม่สามารถตรวจสอบกล้องได้:", err);
+    });
+}
+
 function chooseImageSource() {
+    const fileInput = document.getElementById('equipmentImage');
+    
+    // ถ้าระบบตรวจพบว่า "ไม่มีกล้อง" -> ให้เปิดคลังภาพ/หน้าต่างเลือกไฟล์ ทันที!
+    if (!isCameraAvailable) {
+        fileInput.removeAttribute('capture');
+        fileInput.click();
+        return; // จบการทำงาน ไม่ต้องโชว์เมนูถาม
+    }
+
+    // ถ้าระบบตรวจพบว่า "มีกล้อง" -> ให้โชว์เมนูถามตามปกติ
     Swal.fire({
         title: 'เลือกวิธีเพิ่มรูปภาพ',
         showDenyButton: true,
@@ -1029,13 +1078,10 @@ function chooseImageSource() {
         confirmButtonColor: '#3085d6',
         denyButtonColor: '#28a745'
     }).then((result) => {
-        const fileInput = document.getElementById('equipmentImage');
         if (result.isConfirmed) {
-            // กรณีเลือก "ถ่ายรูปใหม่" -> แอบเติมคำสั่ง capture เพื่อบังคับเปิดกล้อง
             fileInput.setAttribute('capture', 'environment');
             fileInput.click();
         } else if (result.isDenied) {
-            // กรณีเลือก "เลือกจากคลัง" -> ลบคำสั่ง capture ออก เพื่อให้เปิดอัลบั้ม
             fileInput.removeAttribute('capture');
             fileInput.click();
         }
